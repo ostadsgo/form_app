@@ -60,13 +60,14 @@ class FormBuilder:
         field_name = QLineEdit()
         field_name.setPlaceholderText("نام فیلد")
         field_name.setLayoutDirection(Qt.LayoutDirection.RightToLeft)
-        field_name.setFocuse()
+        print(field_name)
 
         field_type = QComboBox()
         field_type.addItems(["متن", "عدد", "مبلغ", "شماره کارت", "شماره شبا", "توضیحات"])
         field_type.setLayoutDirection(Qt.LayoutDirection.RightToLeft)
 
         self.ui.fields_layout.addRow(field_name, field_type)
+        field_name.setFocus()
 
     def remove_fields(self):
         pass
