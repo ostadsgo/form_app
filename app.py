@@ -1,15 +1,3 @@
-# QUESTIONS:
-# is it must tab oriented ?
-# if forms name wasn't unique and if user wants to edit a from 
-# and we able to show the forms for user after editing which form
-# will updated in the json file, first one, second one, or what
-# clearly we have develop a method to distinguesh between forms. eigter make
-# them unique with id field or make them unique in form name.
-
-# MAYBE: 
-# write some helper functions like is_empty
-# border style used two times 
-
 import json
 import sys
 from pathlib import Path
@@ -34,16 +22,79 @@ class File:
             data = json.load(json_file)
         return data
 
+class FormEdit:
+    def __init__(self, ui):
+        self.ui = ui
+        self.forms = File.load_forms("forms.json")
+        self.form_index = 0
+
+        self.set_form_names()
+
+        self.ui.update_form_button.clicked.connect(self.on_update_form)
+
+    def set_form_names(self):
+        form_names = [form.get("name") for form in self.forms]
+
+        # set form name to the combo
+        for form_name in form_names:
+            self.ui.form_list_combo.addItem(form_name)
+
+        self.ui.form_list_combo.currentIndexChanged.connect(self.on_select_form)
+
+    def on_select_form(self, index):
+        # Clear ef_fields_layout 
+        for row_number in reversed(range(self.ui.ef_fields_layout.rowCount())):
+            self.ui.ef_fields_layout.removeRow(row_number)
+            
+
+        form_name_edit = QLineEdit()
+        form_name_edit.setText(self.forms[index]["name"])
+        self.ui.ef_fields_layout.insertRow(0, "نام فرم", form_name_edit)
+
+        fields = self.forms[index]["fields"]
+        for rownum, field in enumerate(fields, 1):
+            # fill the fields_layout
+            field_name = QLineEdit()
+            field_name.setText(field.get("field_name"))
+
+            field_types = QComboBox()
+            field_types.addItems(["متن", "عدد", "مبلغ", "شماره کارت", "شماره شبا", "توضیحات"])
+            field_types.setCurrentText(field["field_type"])
+
+            self.ui.ef_fields_layout.insertRow(rownum, field_name, field_types)
+
+        # index of the form that will updated
+        self.form_index = index
+        # Enable button to update form
+        self.ui.update_form_button.setEnabled(True)
+
+
+    def on_update_form(self):
+        form = {"name": "", "fields": []}
+        # extract form name 
+        form_name_edit= self.ui.ef_fields_layout.itemAt(0, QFormLayout.FieldRole).widget()
+        form["name"] = form_name_edit.text()
+
+
+        # we want skipe first row which is the form name
+        # This code extract fields from the form layout
+        for row_count in range(1, self.ui.ef_fields_layout.rowCount()):
+            field_name = self.ui.ef_fields_layout.itemAt(row_count, QFormLayout.LabelRole).widget()
+            field_type = self.ui.ef_fields_layout.itemAt(row_count, QFormLayout.FieldRole).widget()
+            row = {"field_name": field_name.text(), "field_type": field_type.currentText()}
+            form["fields"].append(row)
+        # update forms
+        self.forms[self.form_index] = form
+        print(self.forms)
+        # save in the file
+        File.save_form(self.forms, "forms.json")
+
+
 
 class FormBuilder:
     def __init__(self, ui):
         self.forms = File.load_forms("forms.json")
         self.ui = ui
-        # [O] TODO: before save form check fields to not be empty
-        # [O] TODO: Form name lineedit
-        # TODO: Remove field
-        # TODO: What if user wants to change order of fields(row) if missed columns order
-        # TODO: I think I have to destroy fields after form been saved.
 
         self.ui.field_name.setFocus()
         # buttons event
@@ -51,8 +102,6 @@ class FormBuilder:
         self.ui.save_form_button.clicked.connect(self.save_form)
 
     def add_field(self):
-        # [O] TODO: Set focus to field name
-        # check if last row not invalid
         last_row = self.ui.fields_layout.rowCount() - 1
         field_name = self.ui.fields_layout.itemAt(last_row, QFormLayout.LabelRole).widget()
         field_name.setStyleSheet("")
@@ -67,7 +116,6 @@ class FormBuilder:
         field_name = QLineEdit()
         field_name.setPlaceholderText("نام فیلد")
         field_name.setLayoutDirection(Qt.LayoutDirection.RightToLeft)
-        print(field_name)
 
         field_type = QComboBox()
         field_type.addItems(["متن", "عدد", "مبلغ", "شماره کارت", "شماره شبا", "توضیحات"])
@@ -80,22 +128,19 @@ class FormBuilder:
         pass
 
     def save_form(self):
-        # TODO: check form name not be empty
-        # TODO: check at last one row with field name and type exist in the form layout
-
         if not self.ui.form_name.text():
             self.ui.form_name.setStyleSheet("border: 2px solid red;")
             return
 
-        form = []
-        form_name = self.ui.form_name.text()
+        form = {"name": "", "fields": []}
+        form["name"] = self.ui.form_name.text().strip()
         for row_count in range(self.ui.fields_layout.rowCount()):
             field_name = self.ui.fields_layout.itemAt(row_count, QFormLayout.LabelRole).widget()
             field_type = self.ui.fields_layout.itemAt(row_count, QFormLayout.FieldRole).widget()
-            row = (field_name.text(), field_type.currentText())
-            form.append(row)
+            row = {"field_name": field_name.text(), "field_type": field_type.currentText()}
+            form["fields"].append(row)
 
-        self.forms.append({form_name: form})
+        self.forms.append(form)
         File.save_form(self.forms, "forms.json")
 
 
@@ -110,6 +155,7 @@ class MainWindow(QMainWindow):
 
         # Form builder tab
         self.form_builder = FormBuilder(self.ui)
+        self.form_edit = FormEdit(self.ui)
 
         # Main window settings
         self.win_config()
