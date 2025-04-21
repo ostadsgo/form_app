@@ -1,5 +1,10 @@
 # QUESTIONS:
 # is it must tab oriented ?
+# if forms name wasn't unique and if user wants to edit a from 
+# and we able to show the forms for user after editing which form
+# will updated in the json file, first one, second one, or what
+# clearly we have develop a method to distinguesh between forms. eigter make
+# them unique with id field or make them unique in form name.
 
 # MAYBE: 
 # write some helper functions like is_empty
@@ -17,13 +22,14 @@ UI_DIR = Path(__file__).parent / "ui"
 
 class File:
     @classmethod
-    def save_form(self, data, filename):
-        with open(filename, "w") as json_file:
-            json.dump(data, json_file)
+    def save_form(cls, data, filename):
+        with open(filename, "w", encoding='utf-8') as json_file:
+            json.dump(data, json_file, ensure_ascii=False, indent=2)
             print("forms.json saved!")
+            return True
 
     @classmethod
-    def load_forms(self, filename):
+    def load_forms(cls, filename, encoding='utf-8'):
         with open(filename, "r") as json_file:
             data = json.load(json_file)
         return data
@@ -31,12 +37,13 @@ class File:
 
 class FormBuilder:
     def __init__(self, ui):
-        self.rows = File.load_forms("forms.json")
+        self.forms = File.load_forms("forms.json")
         self.ui = ui
-        # [1] TODO: before save form check fields to not be empty
-        # TODO: Form name lineedit
+        # [O] TODO: before save form check fields to not be empty
+        # [O] TODO: Form name lineedit
         # TODO: Remove field
-        # TODO:
+        # TODO: What if user wants to change order of fields(row) if missed columns order
+        # TODO: I think I have to destroy fields after form been saved.
 
         self.ui.field_name.setFocus()
         # buttons event
@@ -44,7 +51,7 @@ class FormBuilder:
         self.ui.save_form_button.clicked.connect(self.save_form)
 
     def add_field(self):
-        # TODO: Set focus to field name
+        # [O] TODO: Set focus to field name
         # check if last row not invalid
         last_row = self.ui.fields_layout.rowCount() - 1
         field_name = self.ui.fields_layout.itemAt(last_row, QFormLayout.LabelRole).widget()
@@ -80,14 +87,16 @@ class FormBuilder:
             self.ui.form_name.setStyleSheet("border: 2px solid red;")
             return
 
+        form = []
         form_name = self.ui.form_name.text()
-        for row in range(self.ui.fields_layout.rowCount()):
-            field_name = self.ui.fields_layout.itemAt(row, QFormLayout.LabelRole).widget()
-            field_type = self.ui.fields_layout.itemAt(row, QFormLayout.FieldRole).widget()
-            row = {"field_name": field_name.text(), "field_type": field_type.currentText()}
-            self.rows.append(row)
+        for row_count in range(self.ui.fields_layout.rowCount()):
+            field_name = self.ui.fields_layout.itemAt(row_count, QFormLayout.LabelRole).widget()
+            field_type = self.ui.fields_layout.itemAt(row_count, QFormLayout.FieldRole).widget()
+            row = (field_name.text(), field_type.currentText())
+            form.append(row)
 
-        File.save_form(self.rows, "forms.json")
+        self.forms.append({form_name: form})
+        File.save_form(self.forms, "forms.json")
 
 
 class MainWindow(QMainWindow):
