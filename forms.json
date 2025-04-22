@@ -7,7 +7,7 @@
         "field_type": "متن"
       },
       {
-        "field_name": "شماره",
+        "field_name": "مبلغ",
         "field_type": "عدد"
       }
     ]
