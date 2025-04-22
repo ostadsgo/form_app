@@ -1,26 +1,103 @@
 import json
 import sys
 from pathlib import Path
-from PySide6.QtWidgets import QApplication, QMainWindow, QLineEdit, QComboBox, QFormLayout
+from PySide6.QtWidgets import QApplication, QMainWindow, QLineEdit, QComboBox, QFormLayout, QTableWidgetItem
 from PySide6.QtUiTools import QUiLoader
 from PySide6.QtCore import Qt
 
 UI_DIR = Path(__file__).parent / "ui"
+DATA_DIR = Path(__file__).parent / "data" 
 
 
 class File:
     @classmethod
     def save_form(cls, data, filename):
-        with open(filename, "w", encoding='utf-8') as json_file:
+        with open(filename, "w", encoding="utf-8") as json_file:
             json.dump(data, json_file, ensure_ascii=False, indent=2)
             print("forms.json saved!")
             return True
 
     @classmethod
-    def load_forms(cls, filename, encoding='utf-8'):
+    def load_forms(cls, filename, encoding="utf-8"):
         with open(filename, "r") as json_file:
             data = json.load(json_file)
         return data
+
+
+class FormInsertData:
+    def __init__(self, ui):
+        self.forms = File.load_forms("forms.json")
+
+        self.ui = ui
+        self.form_list_combo = self.ui.comboBox
+        self.save_data_button = self.ui.pushButton
+        self.table = self.ui.tableWidget
+        self.add_row_button = self.ui.toolButton
+        self.remove_row_button = self.ui.toolButton_2
+
+        self.set_form_names()
+
+        ## events
+        self.add_row_button.clicked.connect(self.on_add_row)
+        self.remove_row_button.clicked.connect(self.on_remove_row)
+        self.save_data_button.clicked.connect(self.on_save_data)
+
+    def set_form_names(self):
+        form_names = [form.get("name") for form in self.forms]
+
+        # set form name to the combo
+        for form_name in form_names:
+            self.form_list_combo.addItem(form_name)
+
+        self.form_list_combo.currentIndexChanged.connect(self.on_select_form)
+
+    def on_select_form(self, index):
+        self.form_list_combo.setStyleSheet("")
+
+        # get fields and add it as table columns
+        selected_form = self.forms[index]
+        fields = selected_form["fields"]
+        column_names = [field["field_name"] for field in fields]
+
+        self.table.setColumnCount(len(column_names))
+        self.table.setHorizontalHeaderLabels(column_names)
+
+
+    def on_add_row(self):
+        if not self.form_list_combo.currentText():
+            self.form_list_combo.setStyleSheet("border: 2px solid red;")
+            return
+
+        # add empty row
+        row = self.table.rowCount()
+        self.table.insertRow(row)
+
+        # add empty string to new row 
+        for col in range(self.table.columnCount()):
+            self.table.setItem(row, col, QTableWidgetItem(""))  
+
+        # set focus to new row
+        self.table.setCurrentCell(row, 0)
+        # Start editing immediately
+        self.table.editItem(self.table.item(row, 0))
+
+
+    def on_remove_row(self):
+        self.table.removeRow(self.table.currentRow())
+
+    def on_save_data(self):
+        rows = []
+        for row_index in range(self.table.rowCount()):
+            row = []
+            # extract data of a cell
+            for column_index in range(self.table.columnCount()):
+                cell = self.table.item(row_index, column_index)
+                row.append(cell.text() if cell else "")
+            rows.append(row)
+        print(rows)
+
+        # Access column names; create csv stuff and save rows with columns in csv file
+
 
 class FormEdit:
     def __init__(self, ui):
@@ -42,10 +119,9 @@ class FormEdit:
         self.ui.form_list_combo.currentIndexChanged.connect(self.on_select_form)
 
     def on_select_form(self, index):
-        # Clear ef_fields_layout 
+        # Clear ef_fields_layout
         for row_number in reversed(range(self.ui.ef_fields_layout.rowCount())):
             self.ui.ef_fields_layout.removeRow(row_number)
-            
 
         form_name_edit = QLineEdit()
         form_name_edit.setText(self.forms[index]["name"])
@@ -68,13 +144,11 @@ class FormEdit:
         # Enable button to update form
         self.ui.update_form_button.setEnabled(True)
 
-
     def on_update_form(self):
         form = {"name": "", "fields": []}
-        # extract form name 
-        form_name_edit= self.ui.ef_fields_layout.itemAt(0, QFormLayout.FieldRole).widget()
+        # extract form name
+        form_name_edit = self.ui.ef_fields_layout.itemAt(0, QFormLayout.FieldRole).widget()
         form["name"] = form_name_edit.text()
-
 
         # we want skipe first row which is the form name
         # This code extract fields from the form layout
@@ -88,7 +162,6 @@ class FormEdit:
         print(self.forms)
         # save in the file
         File.save_form(self.forms, "forms.json")
-
 
 
 class FormBuilder:
@@ -156,12 +229,13 @@ class MainWindow(QMainWindow):
         # Form builder tab
         self.form_builder = FormBuilder(self.ui)
         self.form_edit = FormEdit(self.ui)
+        self.form_insert_data = FormInsertData(self.ui)
 
         # Main window settings
         self.win_config()
 
     def win_config(self):
-        self.resize(500, 400)
+        self.resize(600, 500)
         self.setWindowTitle("فرم")
 
 

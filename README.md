@@ -3,7 +3,6 @@ CONSIDRATIONS:
 does it make the updating easier.
 
 
-
 QUESTIONS:
 is it must tab oriented ?
 if forms name wasn't unique and if user wants to edit a from 
@@ -39,3 +38,5 @@ change field_type to field_types
 display message on some situation like from saved edit something delete and etc
 
 # TODO: User should be able to add new fields in edit form tab
+# TODO: Create new tab using tab key.
+# TODO: table data should act based on their type.
