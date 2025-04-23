@@ -40,3 +40,6 @@ display message on some situation like from saved edit something delete and etc
 # TODO: User should be able to add new fields in edit form tab
 # TODO: Create new tab using tab key.
 # TODO: table data should act based on their type.
+
+#TODO: multi choice should be in a seperate menu action and form.
+# TODO: scroll for form create window

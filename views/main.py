@@ -1,13 +1,11 @@
 import sys
 from pathlib import Path
+
 from PySide6.QtWidgets import QApplication, QMainWindow, QFrame, QVBoxLayout, QPushButton
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QAction 
-from PySide6.QtUiTools import QUiLoader
 
-### Global variables
-UI_DIR = Path(__file__).parent.parent / "ui"
-
+from . import utils, forms
 
 
 class MainWindow(QMainWindow):
@@ -15,6 +13,7 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.init()
         self.layout = QVBoxLayout()
+        self.form = None
 
         # Menubar
         self.menubar()
@@ -57,7 +56,7 @@ class MainWindow(QMainWindow):
         help_menu.addActions([help_action, help_contact_action, help_about_action])
 
         ### EVENTS
-        form_create_action.triggered.connect(self.load_form_create_ui)
+        form_create_action.triggered.connect(self.load_form_create)
 
 
     def main(self):
@@ -71,17 +70,14 @@ class MainWindow(QMainWindow):
     def statusbar(self):
         pass
 
-    def load_ui(self, filename):
-        loader = QUiLoader()
-        ui = loader.load(UI_DIR / filename, self)
-        return ui
 
-    def load_form_create_ui(self):
-        # Destroy form that is in main layout
-        self.layout.takeAt(0)
+    def clear_mainframe(self, index=0):
+        self.layout.takeAt(index)
 
-        ui = self.load_ui("form_create.ui")
-        self.layout.addWidget(ui)
+    def load_form_create(self):
+        self.clear_mainframe()
+        self.form  = forms.FormCreate()
+        self.layout.addWidget(self.form.ui)
 
 
     @classmethod
