@@ -26,22 +26,7 @@
    <locale language="Persian" country="Iran"/>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <layout class="QVBoxLayout" name="verticalLayout">
-    <item>
-     <widget class="QFrame" name="frame">
-      <property name="layoutDirection">
-       <enum>Qt::LayoutDirection::RightToLeft</enum>
-      </property>
-      <property name="frameShape">
-       <enum>QFrame::Shape::Box</enum>
-      </property>
-      <property name="frameShadow">
-       <enum>QFrame::Shadow::Plain</enum>
-      </property>
-      <layout class="QVBoxLayout" name="verticalLayout_2"/>
-     </widget>
-    </item>
-   </layout>
+   <layout class="QVBoxLayout" name="verticalLayout"/>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
@@ -80,10 +65,19 @@
     <addaction name="action_7"/>
     <addaction name="action_8"/>
    </widget>
+   <widget class="QMenu" name="menuhello">
+    <property name="title">
+     <string>hello</string>
+    </property>
+    <addaction name="actionsome"/>
+    <addaction name="separator"/>
+    <addaction name="actionanother"/>
+   </widget>
    <addaction name="menu"/>
    <addaction name="menu_2"/>
    <addaction name="menu_3"/>
    <addaction name="menu_4"/>
+   <addaction name="menuhello"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <action name="action">
@@ -124,6 +118,16 @@
   <action name="action_8">
    <property name="text">
     <string>درباره ما</string>
+   </property>
+  </action>
+  <action name="actionsome">
+   <property name="text">
+    <string>some</string>
+   </property>
+  </action>
+  <action name="actionanother">
+   <property name="text">
+    <string>another</string>
    </property>
   </action>
  </widget>
