@@ -43,3 +43,4 @@ display message on some situation like from saved edit something delete and etc
 
 #TODO: multi choice should be in a seperate menu action and form.
 # TODO: scroll for form create window
+#TODO: close button for each field(row)
