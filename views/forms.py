@@ -3,7 +3,7 @@ like form creation, updating, deleting and etc.
 """
 from PySide6.QtWidgets import (QFormLayout, QWidget, QLineEdit, 
                                QComboBox, QFrame, QHBoxLayout,
-                               QLabel)
+                               QLabel, QToolButton)
 from PySide6.QtCore import Qt
 
 from views import utils
@@ -24,22 +24,28 @@ class FormCreate:
         self.ui.field_types.addItems(self.types)
 
         # Events
+        self.ui.delete_button.clicked.connect(self.on_delete_field)
         self.ui.add_field.clicked.connect(self.on_add_field)
         self.ui.save_form.clicked.connect(self.on_save)
 
-    def _config_field_layout(self, layout):
+
+    def config_field_layout(self, layout):
+        """ Set `field_layout` property to `layout` """
         field_layout = self.ui.field_layout
         stretch = [field_layout.stretch(i) for i in range(field_layout.count())]
+        print(stretch)
         spacing = field_layout.spacing()
         margins = field_layout.getContentsMargins()
-        # Should be after creating widgets
+        # apply stretch to layout
         for index, factor in enumerate(stretch):
             layout.setStretch(index, factor)
 
         layout.setSpacing(spacing)
         layout.setContentsMargins(*margins)
 
-    def _add_new_field(self):
+
+
+    def add_new_field(self):
         # containers
         frame = QFrame()
         layout = QHBoxLayout(frame)
@@ -47,33 +53,43 @@ class FormCreate:
         layout.setObjectName("field_layout")
 
         # widgets
+        delete_button = QToolButton() 
         field_name = QLineEdit()
         field_types = QComboBox()
-        hidden_label = QLabel()
+        multichoice = QComboBox()
 
         # widgets config
+        delete_button.setText("X")
+        # tool_button.setIcon(icon)
         field_name.setPlaceholderText("مانند: نام مشتری")
-        field_name.setFocus()
         field_types.addItems(self.types)
+        multichoice.setEnabled(False)
+        delete_button.setObjectName("delete_button")
         field_name.setObjectName("field_name")
         field_types.setObjectName("field_types")
-        hidden_label.setObjectName("hidden_label")
+        multichoice.setObjectName("multi_choice")
 
         # Add widgets to layout
+        layout.addWidget(delete_button)
         layout.addWidget(field_name)
         layout.addWidget(utils.vertical_line())
         layout.addWidget(field_types)
         layout.addWidget(utils.vertical_line())
-        layout.addWidget(hidden_label)
+        layout.addWidget(multichoice)
 
         # Add frame to fields_frame
         self.ui.fields_frame.layout().addWidget(frame)
 
         # Add config to layout to be look like field_layout designed in qt desinger
-        self._config_field_layout(layout)
+        self.config_field_layout(layout)
 
+        # # set focus to new row's lineEdit
+        field_name.setFocus()
 
-    def _field_values(self):
+        # Events
+        delete_button.clicked.connect(self.on_delete_field)
+
+    def field_values(self):
         field_frames = self.ui.fields_frame.findChildren(QFrame, "field_frame")
         self.form_data = []
 
@@ -98,15 +114,18 @@ class FormCreate:
             return False
 
         self.last_field_name.setStyleSheet("border: 2px solid red;")
+        self.last_field_name.setFocus()
         return True
 
+    def on_delete_field(self):
+        pass
 
     def on_add_field(self):
         if self.is_field_name_empty():
             return
 
-        self._add_new_field()
-        self._field_values()
+        self.add_new_field()
+        self.field_values()
         
 
     def on_save(self):

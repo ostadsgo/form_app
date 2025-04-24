@@ -111,7 +111,7 @@
         <property name="lineWidth">
          <number>1</number>
         </property>
-        <layout class="QHBoxLayout" name="header_layout" stretch="1,0,1,0,1">
+        <layout class="QHBoxLayout" name="header_layout" stretch="0,0,0,0,0,0">
          <property name="spacing">
           <number>5</number>
          </property>
@@ -127,6 +127,16 @@
          <property name="bottomMargin">
           <number>2</number>
          </property>
+         <item>
+          <widget class="QToolButton" name="tool_button">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
+           <property name="text">
+            <string>X</string>
+           </property>
+          </widget>
+         </item>
          <item>
           <widget class="QLabel" name="label_2">
            <property name="text">
@@ -239,7 +249,7 @@
               <property name="frameShadow">
                <enum>QFrame::Shadow::Plain</enum>
               </property>
-              <layout class="QHBoxLayout" name="field_layout" stretch="1,0,1,0,1">
+              <layout class="QHBoxLayout" name="field_layout" stretch="0,1,0,1,0,1">
                <property name="spacing">
                 <number>5</number>
                </property>
@@ -255,6 +265,13 @@
                <property name="bottomMargin">
                 <number>2</number>
                </property>
+               <item>
+                <widget class="QToolButton" name="delete_button">
+                 <property name="text">
+                  <string>X</string>
+                 </property>
+                </widget>
+               </item>
                <item>
                 <widget class="QLineEdit" name="field_name">
                  <property name="sizePolicy">
@@ -286,15 +303,9 @@
                 </widget>
                </item>
                <item>
-                <widget class="QLabel" name="hidden_lable">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="text">
-                  <string/>
+                <widget class="QComboBox" name="multi_choice">
+                 <property name="enabled">
+                  <bool>false</bool>
                  </property>
                 </widget>
                </item>

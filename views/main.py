@@ -66,6 +66,7 @@ class MainWindow(QMainWindow):
 
         mainframe.setLayout(self.layout)
         self.setCentralWidget(mainframe)
+        self.load_form_create()
 
     def statusbar(self):
         pass
@@ -76,7 +77,7 @@ class MainWindow(QMainWindow):
 
     def load_form_create(self):
         self.clear_mainframe()
-        self.form  = forms.FormCreate()
+        self.form = forms.FormCreate()
         self.layout.addWidget(self.form.ui)
 
 

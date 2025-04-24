@@ -18,3 +18,8 @@ def vertical_line():
     vertical_line.setFrameShadow(QFrame.Sunken)
     return vertical_line
 
+def toggle_visibility(widget):
+    if widget.isVisible():
+        widget.setVisible(False)
+    else:
+        widget.setVisible(True)
