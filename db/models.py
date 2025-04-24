@@ -1,5 +1,6 @@
 import sqlite3
 
+
 class Database:
     def __init__(self, db_filename):
         self.db_filename = db_filename
@@ -9,7 +10,7 @@ class Database:
 
     def connect(self):
         if self.connection:
-            return # already connected 
+            return  # already connected
 
         try:
             with sqlite3.connect(self.db_filename) as conn:
@@ -19,7 +20,6 @@ class Database:
         except sqlite3.OperationalError as e:
             print("Failed to open database:", e)
 
-
     def execute(self, query, params=()):
         if not self.connection:
             print("No database connection established")
@@ -28,6 +28,20 @@ class Database:
         try:
             self.cursor.execute(query, params)
             self.connection.commit()
+            return self.cursor.lastrowid
+        except sqlite3.Error as e:
+            self.connection.rollback()
+            print(f"Error executing query: {e}\nQuery: {query}")
+
+    def executemany(self, query, params=()):
+        if not self.connection:
+            print("No database connection established")
+            return
+
+        try:
+            self.cursor.executemany(query, params)
+            self.connection.commit()
+            return self.cursor.rowcount
         except sqlite3.Error as e:
             self.connection.rollback()
             print(f"Error executing query: {e}\nQuery: {query}")
@@ -35,7 +49,7 @@ class Database:
     def fetch_all(self, query, params=()):
         if not self.connection:
             print("No database connection established")
-        
+
         try:
             self.cursor.execute(query, params)
             return self.cursor.fetchall()
@@ -45,7 +59,7 @@ class Database:
     def fetch_one(self, query, params=()):
         if not self.connection:
             print("No database connection established")
-        
+
         try:
             self.cursor.execute(query, params)
             return self.cursor.fetchone()
@@ -62,12 +76,22 @@ class FormModel:
         types = self.db.fetch_all(sql)
         return [value for item in types for value in item]
 
+    def save_form(self, form_name, data):
+        sql = """INSERT INTO forms(name) VALUES (?)"""
+        formid = self.db.execute(sql, (form_name,))
+
+        print(formid)
+        sql = """ INSERT INTO fields (name, type, form_id) VALUES (?, ?, ?)"""
+        rows = [tuple(row.values()) + (formid,) for row in data]
+        self.db.executemany(sql, rows)
+        # print(rows)
+
 
 
 
 class InfoModel:
     pass
 
+
 class ReportModel:
     pass
-

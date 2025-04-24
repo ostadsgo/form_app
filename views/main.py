@@ -3,7 +3,7 @@ from pathlib import Path
 
 from PySide6.QtWidgets import QApplication, QMainWindow, QFrame, QVBoxLayout, QPushButton
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QAction 
+from PySide6.QtGui import QAction
 
 from . import utils, forms
 
@@ -19,7 +19,6 @@ class MainWindow(QMainWindow):
         self.menubar()
         self.main()
         self.statusbar()
-
 
     def init(self):
         self.setLayoutDirection(Qt.RightToLeft)
@@ -42,7 +41,7 @@ class MainWindow(QMainWindow):
         info_insert_action = QAction("افزودن اطلاعات", self)
         info_display_action = QAction("نمایش اطلاعات", self)
         info_menu.addActions([info_insert_action, info_display_action])
-        
+
         ### Report Menu
         report_menu = menubar.addMenu("گزارشات")
         report_yearly_action = QAction("گزارش ماهانه", self)
@@ -58,7 +57,6 @@ class MainWindow(QMainWindow):
         ### EVENTS
         form_create_action.triggered.connect(self.load_form_create)
 
-
     def main(self):
         mainframe = QFrame()
         mainframe.setFrameShape(QFrame.StyledPanel)
@@ -71,7 +69,6 @@ class MainWindow(QMainWindow):
     def statusbar(self):
         pass
 
-
     def clear_mainframe(self, index=0):
         self.layout.takeAt(index)
 
@@ -80,14 +77,9 @@ class MainWindow(QMainWindow):
         self.form = forms.FormCreate()
         self.layout.addWidget(self.form.ui)
 
-
     @classmethod
     def run(self):
         app = QApplication(sys.argv)
         window = MainWindow()
         window.show()
         sys.exit(app.exec())
-
-
-
-

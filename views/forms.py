@@ -1,13 +1,22 @@
-""" Contain all forms related to form operation
+"""Contain all forms related to form operation
 like form creation, updating, deleting and etc.
 """
-from PySide6.QtWidgets import (QFormLayout, QWidget, QLineEdit, 
-                               QComboBox, QFrame, QHBoxLayout,
-                               QLabel, QToolButton)
+
+from PySide6.QtWidgets import (
+    QFormLayout,
+    QWidget,
+    QLineEdit,
+    QComboBox,
+    QFrame,
+    QHBoxLayout,
+    QLabel,
+    QToolButton,
+)
 from PySide6.QtCore import Qt
 
 from views import utils
 from db.models import FormModel
+
 
 class FormCreate:
     def __init__(self):
@@ -28,12 +37,10 @@ class FormCreate:
         self.ui.add_field.clicked.connect(self.on_add_field)
         self.ui.save_form.clicked.connect(self.on_save)
 
-
     def config_field_layout(self, layout):
-        """ Set `field_layout` property to `layout` """
+        """Set `field_layout` property to `layout`"""
         field_layout = self.ui.field_layout
         stretch = [field_layout.stretch(i) for i in range(field_layout.count())]
-        print(stretch)
         spacing = field_layout.spacing()
         margins = field_layout.getContentsMargins()
         # apply stretch to layout
@@ -43,8 +50,6 @@ class FormCreate:
         layout.setSpacing(spacing)
         layout.setContentsMargins(*margins)
 
-
-
     def add_new_field(self):
         # containers
         frame = QFrame()
@@ -53,7 +58,7 @@ class FormCreate:
         layout.setObjectName("field_layout")
 
         # widgets
-        delete_button = QToolButton() 
+        delete_button = QToolButton()
         field_name = QLineEdit()
         field_types = QComboBox()
         multichoice = QComboBox()
@@ -97,14 +102,12 @@ class FormCreate:
             field_value = {}
             field_name = frame.findChild(QLineEdit, "field_name")
             field_types = frame.findChild(QComboBox, "field_types")
-            field_value["field_name"] = field_name.text()
-            field_value["field_types"] = field_types.currentText()
+            field_value["name"] = field_name.text()
+            field_value["type"] = field_types.currentText()
             self.form_data.append(field_value)
 
-
     def is_field_name_empty(self):
-        #TODO: Add message to status bar
-        # Field name cannot be empty
+        """Check last lineEdit in the form creation."""
         frames = self.ui.fields_frame.findChildren(QFrame, "field_frame")
         if frames:
             self.last_field_name = frames[-1].findChild(QLineEdit, "field_name")
@@ -117,6 +120,14 @@ class FormCreate:
         self.last_field_name.setFocus()
         return True
 
+    def is_form_name_empty(self):
+        if self.ui.form_name.text():
+            self.ui.form_name.setStyleSheet("")
+            return False
+
+        self.ui.form_name.setStyleSheet("border: 2px solid red;")
+        return
+
     def on_delete_field(self):
         pass
 
@@ -125,19 +136,26 @@ class FormCreate:
             return
 
         self.add_new_field()
-        self.field_values()
-        
 
     def on_save(self):
-        self.ui.form_name.setStyleSheet("")
-        if not self.ui.form_name.text():
-            self.ui.form_name.setStyleSheet("border: 2px solid red;")
-            #TODO: Add message to status bar
-            # Form name cannot be empty
+        if self.is_form_name_empty() or self.is_field_name_empty():
             return
 
+        # set data to self.form_data
+        self.field_values()
+        form_name = self.ui.form_name.text()
+        self.model.save_form(form_name, self.form_data)
+
+        # form save
         # Access data and save it.
+
         # Message to say form stored successfuly.
+
+        # After save
+        # delete fields except first one and make form's name empty.
+
+    def delete_field(self):
+        pass
 
 
 class FormUpdate:

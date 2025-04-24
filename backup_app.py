@@ -2,12 +2,19 @@ import json
 import sys
 import sqlite3
 from pathlib import Path
-from PySide6.QtWidgets import QApplication, QMainWindow, QLineEdit, QComboBox, QFormLayout, QTableWidgetItem
+from PySide6.QtWidgets import (
+    QApplication,
+    QMainWindow,
+    QLineEdit,
+    QComboBox,
+    QFormLayout,
+    QTableWidgetItem,
+)
 from PySide6.QtUiTools import QUiLoader
 from PySide6.QtCore import Qt
 
 UI_DIR = Path(__file__).parent / "ui"
-DATA_DIR = Path(__file__).parent / "data" 
+DATA_DIR = Path(__file__).parent / "data"
 
 
 class Database:
@@ -19,7 +26,7 @@ class Database:
 
     def connect(self):
         if self.connection:
-            return # already connected 
+            return  # already connected
 
         try:
             with sqlite3.connect(self.db_filename) as conn:
@@ -28,7 +35,6 @@ class Database:
                 print("Succesfuly connect to db.")
         except sqlite3.OperationalError as e:
             print("Failed to open database:", e)
-
 
     def execute(self, query, params=()):
         if not self.connection:
@@ -45,7 +51,7 @@ class Database:
     def fetch_all(self, query, params=()):
         if not self.connection:
             print("No database connection established")
-        
+
         try:
             self.cursor.execute(query, params)
             return self.cursor.fetchall()
@@ -55,7 +61,7 @@ class Database:
     def fetch_one(self, query, params=()):
         if not self.connection:
             print("No database connection established")
-        
+
         try:
             self.cursor.execute(query, params)
             return self.cursor.fetchone()
@@ -63,21 +69,14 @@ class Database:
             print(f"Error fetching data: {e}\nQuery: {query}")
 
 
-
-
-
 class FormType:
     def __init__(self, db):
         self.db = db
-
 
     def get_types(self):
         query = """ SELECT name FROM types """
         types = self.db.fetch_all(query)
         return [item[0] for item in types]
-
-
-
 
 
 class File:
@@ -133,7 +132,6 @@ class FormInsertData:
         self.table.setColumnCount(len(column_names))
         self.table.setHorizontalHeaderLabels(column_names)
 
-
     def on_add_row(self):
         if not self.form_list_combo.currentText():
             self.form_list_combo.setStyleSheet("border: 2px solid red;")
@@ -143,15 +141,14 @@ class FormInsertData:
         row = self.table.rowCount()
         self.table.insertRow(row)
 
-        # add empty string to new row 
+        # add empty string to new row
         for col in range(self.table.columnCount()):
-            self.table.setItem(row, col, QTableWidgetItem(""))  
+            self.table.setItem(row, col, QTableWidgetItem(""))
 
         # set focus to new row
         self.table.setCurrentCell(row, 0)
         # Start editing immediately
         self.table.editItem(self.table.item(row, 0))
-
 
     def on_remove_row(self):
         self.table.removeRow(self.table.currentRow())
