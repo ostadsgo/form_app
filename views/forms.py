@@ -23,7 +23,9 @@ class FormCreate:
         # Load ui / config
         self.ui = utils.load_ui(utils.FORM_DIR / "create.ui")
         self.form_data = []
-        self.last_field_name = None
+        self.delete_me = self.ui.delete_button
+        self.field_index = 1
+        self.recent_frame = self.ui.field_frame
 
         # Database operation
         self.model = FormModel()
@@ -54,8 +56,9 @@ class FormCreate:
         # containers
         frame = QFrame()
         layout = QHBoxLayout(frame)
-        frame.setObjectName("field_frame")
-        layout.setObjectName("field_layout")
+        frame.setObjectName(f"field_frame_{self.field_index}")
+        layout.setObjectName(f"field_layout_{self.field_index}")
+        self.recent_frame = frame
 
         # widgets
         delete_button = QToolButton()
@@ -69,10 +72,10 @@ class FormCreate:
         field_name.setPlaceholderText("مانند: نام مشتری")
         field_types.addItems(self.types)
         multichoice.setEnabled(False)
-        delete_button.setObjectName("delete_button")
-        field_name.setObjectName("field_name")
-        field_types.setObjectName("field_types")
-        multichoice.setObjectName("multi_choice")
+        delete_button.setObjectName(f"delete_button_{self.field_index}")
+        field_name.setObjectName(f"field_name_{self.field_index}")
+        field_types.setObjectName(f"field_types_{self.field_index}")
+        multichoice.setObjectName(f"multi_choice_{self.field_index}")
 
         # Add widgets to layout
         layout.addWidget(delete_button)
@@ -94,8 +97,18 @@ class FormCreate:
         # Events
         delete_button.clicked.connect(self.on_delete_field)
 
+        self.field_index += 1
+
+
+    def find_frame(self):
+        children = self.ui.fields_frame.findChildren(QFrame)
+        for child in children:
+            if child.objectName().startswidth("field_frame"):
+                self.field_frames.append(child)
+
     def field_values(self):
         field_frames = self.ui.fields_frame.findChildren(QFrame, "field_frame")
+
         self.form_data = []
 
         for frame in field_frames:
@@ -106,19 +119,37 @@ class FormCreate:
             field_value["type"] = field_types.currentText()
             self.form_data.append(field_value)
 
+    def get_field(self):
+        pass
+
+    def get_fields(self):
+        pass
+
+    def get_field_frames(self):
+        """ Get all field frame in fields_frame"""
+        return self.ui.fields_frame.findChildren(QFrame, options=Qt.FindDirectChildrenOnly)
+
+    def get_all_field_name(self):
+        # extract all QLineEdits in a field(row) - column 1
+        return [frame.findChild(QLineEdit) for frame in self.get_field_frames()]
+
+    def get_field_values(self):
+        pass
+
+
+    # I have to check all QLineEidt to make sure none of the are empty.
+    def is_empty(self):
+        """ check all QLineEidt to make sure none of the are empty."""
+
     def is_field_name_empty(self):
-        """Check last lineEdit in the form creation."""
-        frames = self.ui.fields_frame.findChildren(QFrame, "field_frame")
-        if frames:
-            self.last_field_name = frames[-1].findChild(QLineEdit, "field_name")
-
-        if self.last_field_name.text().strip():
-            self.last_field_name.setStyleSheet("")
-            return False
-
-        self.last_field_name.setStyleSheet("border: 2px solid red;")
-        self.last_field_name.setFocus()
-        return True
+        """ Check all field name widgets to not be empty."""
+        for field_name in self.get_all_field_name():
+            field_name.setStyleSheet("")
+            if not field_name.text().strip():
+                field_name.setStyleSheet("border: 2px solid red;")
+                field_name.setFocus()
+                return True
+        return False
 
     def is_form_name_empty(self):
         if self.ui.form_name.text():
@@ -129,7 +160,9 @@ class FormCreate:
         return
 
     def on_delete_field(self):
-        pass
+        field_frame = self.delete_me.parent().parent()
+        field_frame.layout().removeWidget(field_frame)
+        field_frame.deleteLater()
 
     def on_add_field(self):
         if self.is_field_name_empty():

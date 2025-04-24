@@ -49,3 +49,6 @@ display message on some situation like from saved edit something delete and etc
 - Make english version of choices to work eaiser in programming side;
 - Add message to status bar on save or when user make a misstake
 - Create log file eventually.
+- first field that designed in qt designer make some problem i could remove it
+and create row field programactically when FormCreate appear
+
