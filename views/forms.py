@@ -37,12 +37,9 @@ class FormCreate:
         self.ui.save_button.clicked.connect(self.on_save)
         self.ui.checkall.stateChanged.connect(self.on_checkall)
 
-        # First Field
+        # First row
         self.add_new_field()
 
-    def on_checkall(self):
-        for check in self.checks():
-            check.setChecked(self.ui.checkall.isChecked())
 
     def add_new_field(self):
         # containers
@@ -76,19 +73,18 @@ class FormCreate:
         layout.addSpacing(5)
         layout.setContentsMargins(5, 5, 5, 5)
 
+        # Add frame to layout
         self.ui.body.layout().addWidget(frame)
         # must be here.
         field_name.setFocus()
         self.field_index += 1
 
     def rows(self):
-        field_frames = self.row_frames()
         rows = []
-        for frame in field_frames:
+        for frame in self.row_frames():
             name = frame.findChild(QLineEdit).text()
             types = frame.findChild(QComboBox).currentText()
-            row = (name, types)
-            rows.append(row)
+            rows.append((name, types))
         return rows
 
     def row_frames(self):
@@ -111,9 +107,6 @@ class FormCreate:
         if self.ui.checkall.isChecked():
             self.ui.checkall.setChecked(False)
 
-    def is_empty(self):
-        pass
-
     def is_field_name_empty(self):
         """Check all field name widgets to not be empty."""
         for name in self.names():
@@ -132,6 +125,10 @@ class FormCreate:
         self.ui.form_name.setStyleSheet("border: 2px solid red;")
         return True
 
+    def clear_body(self):
+        for frame in self.row_frames():
+            frame.deleteLater()
+
     def on_add(self):
         # use try / except for validation
         if self.is_field_name_empty():
@@ -146,7 +143,9 @@ class FormCreate:
         # if check all checked uncheck it
         self.un_checkall()
 
-
+    def on_checkall(self):
+        for check in self.checks():
+            check.setChecked(self.ui.checkall.isChecked())
 
     def on_save(self):
         if self.is_form_name_empty() or self.is_field_name_empty():
@@ -154,6 +153,10 @@ class FormCreate:
 
         form_name = self.ui.form_name.text()
         self.model.save_form(form_name, self.rows())
+        self.clear_body()
+        self.ui.form_name.clear()
+
+
 
         # form save
         # Access data and save it.
