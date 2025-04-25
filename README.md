@@ -51,4 +51,5 @@ display message on some situation like from saved edit something delete and etc
 - Create log file eventually.
 - first field that designed in qt designer make some problem i could remove it
 and create row field programactically when FormCreate appear
+- fucking scrollbar
 

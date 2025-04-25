@@ -11,6 +11,9 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QToolButton,
+    QCheckBox,
+    QScrollArea,
+    QSizePolicy,
 )
 from PySide6.QtCore import Qt
 
@@ -20,25 +23,26 @@ from db.models import FormModel
 
 class FormCreate:
     def __init__(self):
-        # Load ui / config
+        ### UI 
         self.ui = utils.load_ui(utils.FORM_DIR / "create.ui")
-        self.form_data = []
-        self.delete_me = self.ui.delete_button
-        self.field_index = 1
-        self.recent_frame = self.ui.field_frame
+        self.data = []
+        self.field_index = 0
+        self.recent_frame = None
+        self.ui.container.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.ui.container.layout().setAlignment(Qt.AlignTop)
 
-        # Database operation
+        ### Models
         self.model = FormModel()
         self.types = self.model.field_types()
 
-        # Add types to field_types combobox
-        self.ui.field_types.addItems(self.types)
+        ### Events
+        self.ui.add_button.clicked.connect(self.on_add_field)
+        self.ui.save_button.clicked.connect(self.on_save)
+        
+        # First Field
+        self.add_new_field()
 
-        # Events
-        self.ui.delete_button.clicked.connect(self.on_delete_field)
-        self.ui.add_field.clicked.connect(self.on_add_field)
-        self.ui.save_form.clicked.connect(self.on_save)
-
+        
     def config_field_layout(self, layout):
         """Set `field_layout` property to `layout`"""
         field_layout = self.ui.field_layout
@@ -60,42 +64,39 @@ class FormCreate:
         layout.setObjectName(f"field_layout_{self.field_index}")
         self.recent_frame = frame
 
-        # widgets
-        delete_button = QToolButton()
+        check = QCheckBox()
         field_name = QLineEdit()
         field_types = QComboBox()
         multichoice = QComboBox()
 
-        # widgets config
-        delete_button.setText("X")
-        # tool_button.setIcon(icon)
         field_name.setPlaceholderText("مانند: نام مشتری")
         field_types.addItems(self.types)
         multichoice.setEnabled(False)
-        delete_button.setObjectName(f"delete_button_{self.field_index}")
+        check.setObjectName(f"check_field_{self.field_index}")
         field_name.setObjectName(f"field_name_{self.field_index}")
         field_types.setObjectName(f"field_types_{self.field_index}")
         multichoice.setObjectName(f"multi_choice_{self.field_index}")
 
         # Add widgets to layout
-        layout.addWidget(delete_button)
+        layout.addWidget(check)
         layout.addWidget(field_name)
-        layout.addWidget(utils.vertical_line())
         layout.addWidget(field_types)
-        layout.addWidget(utils.vertical_line())
         layout.addWidget(multichoice)
+        layout.setStretchFactor(field_name, 1)
+        layout.setStretchFactor(field_types, 1)
+        layout.setStretchFactor(multichoice, 1)
+        layout.addSpacing(5)
+        layout.setContentsMargins(5, 5, 5, 5)
 
         # Add frame to fields_frame
-        self.ui.fields_frame.layout().addWidget(frame)
+        self.ui.body.layout().addWidget(frame)
 
         # Add config to layout to be look like field_layout designed in qt desinger
-        self.config_field_layout(layout)
+        # self.config_field_layout(layout)
 
-        # # set focus to new row's lineEdit
         field_name.setFocus()
+        # stretch = [field_layout.stretch(i) for i in range(field_layout.count())]
 
-        # Events
-        delete_button.clicked.connect(self.on_delete_field)
 
         self.field_index += 1
 
@@ -127,7 +128,7 @@ class FormCreate:
 
     def get_field_frames(self):
         """ Get all field frame in fields_frame"""
-        return self.ui.fields_frame.findChildren(QFrame, options=Qt.FindDirectChildrenOnly)
+        return self.ui.body.findChildren(QFrame, options=Qt.FindDirectChildrenOnly)
 
     def get_all_field_name(self):
         # extract all QLineEdits in a field(row) - column 1
@@ -136,8 +137,6 @@ class FormCreate:
     def get_field_values(self):
         pass
 
-
-    # I have to check all QLineEidt to make sure none of the are empty.
     def is_empty(self):
         """ check all QLineEidt to make sure none of the are empty."""
 
@@ -173,11 +172,11 @@ class FormCreate:
     def on_save(self):
         if self.is_form_name_empty() or self.is_field_name_empty():
             return
-
-        # set data to self.form_data
-        self.field_values()
-        form_name = self.ui.form_name.text()
-        self.model.save_form(form_name, self.form_data)
+        #
+        # # set data to self.form_data
+        # self.field_values()
+        # form_name = self.ui.form_name.text()
+        # self.model.save_form(form_name, self.form_data)
 
         # form save
         # Access data and save it.
