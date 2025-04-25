@@ -76,17 +76,15 @@ class FormModel:
         types = self.db.fetch_all(sql)
         return [value for item in types for value in item]
 
-    def save_form(self, form_name, data):
+    def save_form(self, name, rows):
+        # Save table name - form name
         sql = """INSERT INTO forms(name) VALUES (?)"""
-        formid = self.db.execute(sql, (form_name,))
+        tid = self.db.execute(sql, (name,))
 
-        print(formid)
         sql = """ INSERT INTO fields (name, type, form_id) VALUES (?, ?, ?)"""
-        rows = [tuple(row.values()) + (formid,) for row in data]
+        rows = [(*row, tid) for row in rows]
         self.db.executemany(sql, rows)
-        # print(rows)
-
-
+        print(f"Table {name} with id {tid} stored with fields succussfully.")
 
 
 class InfoModel:

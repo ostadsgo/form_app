@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>610</width>
-    <height>552</height>
+    <width>642</width>
+    <height>542</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -144,7 +144,7 @@
           <number>3</number>
          </property>
          <item>
-          <widget class="QCheckBox" name="checkBox">
+          <widget class="QCheckBox" name="checkall">
            <property name="text">
             <string/>
            </property>
@@ -205,12 +205,15 @@
           <number>0</number>
          </property>
          <item>
-          <widget class="QScrollArea" name="scrollArea">
+          <widget class="QScrollArea" name="scroll_area">
            <property name="frameShape">
             <enum>QFrame::Shape::NoFrame</enum>
            </property>
            <property name="frameShadow">
             <enum>QFrame::Shadow::Plain</enum>
+           </property>
+           <property name="horizontalScrollBarPolicy">
+            <enum>Qt::ScrollBarPolicy::ScrollBarAlwaysOff</enum>
            </property>
            <property name="widgetResizable">
             <bool>true</bool>
@@ -220,8 +223,8 @@
              <rect>
               <x>0</x>
               <y>0</y>
-              <width>588</width>
-              <height>341</height>
+              <width>620</width>
+              <height>331</height>
              </rect>
             </property>
             <layout class="QVBoxLayout" name="verticalLayout_4">

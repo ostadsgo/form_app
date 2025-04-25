@@ -1,7 +1,25 @@
 CONSIDRATIONS:
 - what if i use forms directory to store each form in a text file individually.
 does it make the updating easier.
+- Intersted on making stuff OOP for example insted of form_name  could do
+form.name form.data.row form.widget[1]
+- I think i should go with exception to validation handling.
+```python
+class ValidationError(Exception):
+    pass
 
+def validate_form(self):
+    if not self.ui.form_name.text().strip():
+        raise ValidationError("Form name is required!")
+    # ... other checks
+
+def on_save(self):
+    try:
+        self.validate_form()  # Raises ValidationError if invalid
+        self._perform_save()  # Only runs if validation passes
+    except ValidationError as e:
+        self._show_error_to_user(e)  # Handle gracefully
+```
 
 QUESTIONS:
 is it must tab oriented ?
@@ -52,4 +70,10 @@ display message on some situation like from saved edit something delete and etc
 - first field that designed in qt designer make some problem i could remove it
 and create row field programactically when FormCreate appear
 - fucking scrollbar
+
+- I use the term `Forms` for the form that user created. but accually these are
+not forms there are tables with columns the term fields refer to columns in
+form row user add column name column types and other stuff so i might need to
+change naming stuff.
+
 

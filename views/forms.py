@@ -23,38 +23,26 @@ from db.models import FormModel
 
 class FormCreate:
     def __init__(self):
-        ### UI 
+        ### UI
         self.ui = utils.load_ui(utils.FORM_DIR / "create.ui")
-        self.data = []
         self.field_index = 0
-        self.recent_frame = None
-        self.ui.container.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        self.ui.container.layout().setAlignment(Qt.AlignTop)
 
         ### Models
         self.model = FormModel()
         self.types = self.model.field_types()
 
         ### Events
-        self.ui.add_button.clicked.connect(self.on_add_field)
+        self.ui.add_button.clicked.connect(self.on_add)
+        self.ui.remove_button.clicked.connect(self.on_remove)
         self.ui.save_button.clicked.connect(self.on_save)
-        
+        self.ui.checkall.stateChanged.connect(self.on_checkall)
+
         # First Field
         self.add_new_field()
 
-        
-    def config_field_layout(self, layout):
-        """Set `field_layout` property to `layout`"""
-        field_layout = self.ui.field_layout
-        stretch = [field_layout.stretch(i) for i in range(field_layout.count())]
-        spacing = field_layout.spacing()
-        margins = field_layout.getContentsMargins()
-        # apply stretch to layout
-        for index, factor in enumerate(stretch):
-            layout.setStretch(index, factor)
-
-        layout.setSpacing(spacing)
-        layout.setContentsMargins(*margins)
+    def on_checkall(self):
+        for check in self.checks():
+            check.setChecked(self.ui.checkall.isChecked())
 
     def add_new_field(self):
         # containers
@@ -62,8 +50,8 @@ class FormCreate:
         layout = QHBoxLayout(frame)
         frame.setObjectName(f"field_frame_{self.field_index}")
         layout.setObjectName(f"field_layout_{self.field_index}")
-        self.recent_frame = frame
 
+        # Widgets
         check = QCheckBox()
         field_name = QLineEdit()
         field_types = QComboBox()
@@ -88,65 +76,51 @@ class FormCreate:
         layout.addSpacing(5)
         layout.setContentsMargins(5, 5, 5, 5)
 
-        # Add frame to fields_frame
         self.ui.body.layout().addWidget(frame)
-
-        # Add config to layout to be look like field_layout designed in qt desinger
-        # self.config_field_layout(layout)
-
+        # must be here.
         field_name.setFocus()
-        # stretch = [field_layout.stretch(i) for i in range(field_layout.count())]
-
-
         self.field_index += 1
 
-
-    def find_frame(self):
-        children = self.ui.fields_frame.findChildren(QFrame)
-        for child in children:
-            if child.objectName().startswidth("field_frame"):
-                self.field_frames.append(child)
-
-    def field_values(self):
-        field_frames = self.ui.fields_frame.findChildren(QFrame, "field_frame")
-
-        self.form_data = []
-
+    def rows(self):
+        field_frames = self.row_frames()
+        rows = []
         for frame in field_frames:
-            field_value = {}
-            field_name = frame.findChild(QLineEdit, "field_name")
-            field_types = frame.findChild(QComboBox, "field_types")
-            field_value["name"] = field_name.text()
-            field_value["type"] = field_types.currentText()
-            self.form_data.append(field_value)
+            name = frame.findChild(QLineEdit).text()
+            types = frame.findChild(QComboBox).currentText()
+            row = (name, types)
+            rows.append(row)
+        return rows
 
-    def get_field(self):
-        pass
-
-    def get_fields(self):
-        pass
-
-    def get_field_frames(self):
-        """ Get all field frame in fields_frame"""
+    def row_frames(self):
+        """Get all field frame in fields_frame"""
         return self.ui.body.findChildren(QFrame, options=Qt.FindDirectChildrenOnly)
 
-    def get_all_field_name(self):
-        # extract all QLineEdits in a field(row) - column 1
-        return [frame.findChild(QLineEdit) for frame in self.get_field_frames()]
+    def extract_widget(self, widget):
+        return [frame.findChild(widget) for frame in self.row_frames()]
 
-    def get_field_values(self):
-        pass
+    def names(self):
+        return self.extract_widget(QLineEdit)
+
+    def checks(self):
+        return self.extract_widget(QCheckBox)
+
+    def checkeds(self):
+        return [check for check in self.checks() if check.isChecked()]
+
+    def un_checkall(self):
+        if self.ui.checkall.isChecked():
+            self.ui.checkall.setChecked(False)
 
     def is_empty(self):
-        """ check all QLineEidt to make sure none of the are empty."""
+        pass
 
     def is_field_name_empty(self):
-        """ Check all field name widgets to not be empty."""
-        for field_name in self.get_all_field_name():
-            field_name.setStyleSheet("")
-            if not field_name.text().strip():
-                field_name.setStyleSheet("border: 2px solid red;")
-                field_name.setFocus()
+        """Check all field name widgets to not be empty."""
+        for name in self.names():
+            name.setStyleSheet("")
+            if not name.text().strip():
+                name.setStyleSheet("border: 2px solid red;")
+                name.setFocus()
                 return True
         return False
 
@@ -156,27 +130,30 @@ class FormCreate:
             return False
 
         self.ui.form_name.setStyleSheet("border: 2px solid red;")
-        return
+        return True
 
-    def on_delete_field(self):
-        field_frame = self.delete_me.parent().parent()
-        field_frame.layout().removeWidget(field_frame)
-        field_frame.deleteLater()
-
-    def on_add_field(self):
+    def on_add(self):
+        # use try / except for validation
         if self.is_field_name_empty():
             return
 
         self.add_new_field()
 
+    def on_remove(self):
+        for check in self.checkeds():
+            check.parent().deleteLater()
+
+        # if check all checked uncheck it
+        self.un_checkall()
+
+
+
     def on_save(self):
         if self.is_form_name_empty() or self.is_field_name_empty():
             return
-        #
-        # # set data to self.form_data
-        # self.field_values()
-        # form_name = self.ui.form_name.text()
-        # self.model.save_form(form_name, self.form_data)
+
+        form_name = self.ui.form_name.text()
+        self.model.save_form(form_name, self.rows())
 
         # form save
         # Access data and save it.

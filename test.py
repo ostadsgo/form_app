@@ -1,6 +1,11 @@
-from PySide6.QtWidgets import (QApplication, QPushButton, 
-                              QVBoxLayout, QWidget, QLineEdit, 
-                              QScrollArea)
+from PySide6.QtWidgets import (
+    QApplication,
+    QPushButton,
+    QVBoxLayout,
+    QWidget,
+    QLineEdit,
+    QScrollArea,
+)
 from PySide6.QtCore import Qt
 
 app = QApplication([])
@@ -21,9 +26,11 @@ add_btn = QPushButton("Add LineEdit")
 layout.addWidget(add_btn)
 layout.addWidget(scroll)
 
+
 # Logic
 def add_lineedit():
     container.layout().addWidget(QLineEdit())
+
 
 add_btn.clicked.connect(add_lineedit)
 
