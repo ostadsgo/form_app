@@ -223,7 +223,10 @@ class FormEdit:
         for row_count in range(1, self.ui.ef_fields_layout.rowCount()):
             field_name = self.ui.ef_fields_layout.itemAt(row_count, QFormLayout.LabelRole).widget()
             field_type = self.ui.ef_fields_layout.itemAt(row_count, QFormLayout.FieldRole).widget()
-            row = {"field_name": field_name.text(), "field_type": field_type.currentText()}
+            row = {
+                "field_name": field_name.text(),
+                "field_type": field_type.currentText(),
+            }
             form["fields"].append(row)
         # update forms
         self.forms[self.form_index] = form
@@ -278,7 +281,10 @@ class FormBuilder:
         for row_count in range(self.ui.fields_layout.rowCount()):
             field_name = self.ui.fields_layout.itemAt(row_count, QFormLayout.LabelRole).widget()
             field_type = self.ui.fields_layout.itemAt(row_count, QFormLayout.FieldRole).widget()
-            row = {"field_name": field_name.text(), "field_type": field_type.currentText()}
+            row = {
+                "field_name": field_name.text(),
+                "field_type": field_type.currentText(),
+            }
             form["fields"].append(row)
 
         self.forms.append(form)

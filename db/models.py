@@ -87,9 +87,26 @@ class FormModel:
         print(f"Table {name} with id {tid} stored with fields succussfully.")
 
 
-class InfoModel:
-    pass
+class DataModel:
+    def __init__(self):
+        self.db = Database("forms.db")
+
+    def get_form_names(self):
+        sql = """ SELECT name FROM forms; """
+        names = self.db.fetch_all(sql)
+        return [name for row in names for name in row]
+    
+    def get_form_id(self, name):
+        sql = """ SELECT id FROM forms WHERE name = (?); """
+        fid = self.db.fetch_one(sql, (name,))
+        return fid[0]
+
+    def get_form_fields(self, fid):
+        sql = """ SELECT * FROM fields WHERE form_id = (?); """
+        fields = self.db.fetch_all(sql, (fid,))
+        # Field name and field type
+        return [(field[1], field[2]) for field in fields]
 
 
-class ReportModel:
-    pass
+
+

@@ -2,6 +2,10 @@
 like form creation, updating, deleting and etc.
 """
 
+# Builtins
+from pathlib import Path
+
+# External
 from PySide6.QtWidgets import (
     QFormLayout,
     QWidget,
@@ -15,20 +19,36 @@ from PySide6.QtWidgets import (
     QScrollArea,
     QSizePolicy,
 )
-from PySide6.QtCore import Qt
-
+from PySide6.QtCore import Qt, QLocale
+from PySide6.QtUiTools import QUiLoader
+from PySide6.QtGui import QIntValidator
+# Project
 from views import utils
-from db.models import FormModel
+from db import models
 
 
-class FormCreate:
+class UI:
+    BASE_DIR = Path(__file__).parent.parent
+    UI_DIR = BASE_DIR / "ui"
+    FORM_DIR = UI_DIR / "form"
+
+    @classmethod
+    def load_ui(cls, filename):
+        loader = QUiLoader()
+        return loader.load(cls.FORM_DIR / filename)
+
+
+# ==================
+# -- Table --
+# ==================
+class TableCreateForm:
     def __init__(self):
         ### UI
-        self.ui = utils.load_ui(utils.FORM_DIR / "create.ui")
+        self.ui = UI.load_ui("create.ui")
         self.field_index = 0
 
         ### Models
-        self.model = FormModel()
+        self.model = models.FormModel()
         self.types = self.model.field_types()
 
         ### Events
@@ -39,7 +59,6 @@ class FormCreate:
 
         # First row
         self.add_new_field()
-
 
     def add_new_field(self):
         # containers
@@ -157,24 +176,127 @@ class FormCreate:
         self.ui.form_name.clear()
 
 
-
-        # form save
-        # Access data and save it.
-
-        # Message to say form stored successfuly.
-
-        # After save
-        # delete fields except first one and make form's name empty.
-
-    def delete_field(self):
-        pass
-
-
-class FormUpdate:
+class TableUpdateForm:
     def __init__(self):
         pass
 
 
-class FormDelete:
+class TableDeleteForm:
     def __init_(self):
+        pass
+
+
+# ==================
+# -- Data --
+# ==================
+class DataInsertForm:
+    def __init__(self):
+        self.ui = UI.load_ui("insert.ui")
+        self.model = models.DataModel()
+        self.index = 0
+
+        # get form names and set it to combobox
+        names = self.model.get_form_names()
+        self.ui.form_names.addItems(names)
+        self.ui.form_names.setCurrentText("")
+        self.ui.form_names.currentTextChanged.connect(self.on_form_name_select)
+
+    def on_form_name_select(self):
+        # delete form_frame if there is a form
+        self.clear_form()
+        self.build_form()
+
+    def clear_form(self):
+        while self.ui.form_layout.count():
+            child = self.ui.form_layout.takeAt(0)
+            if child.widget():
+                child.widget().deleteLater()
+
+    def build_form(self):
+        selected_form_name = self.ui.form_names.currentText()
+        form_id = self.model.get_form_id(selected_form_name)
+        fields = self.model.get_form_fields(form_id)
+        # a row in form
+        for name, ftype in fields:
+            # row frame
+            frame = QFrame()
+            layout = QHBoxLayout(frame)
+            frame.setObjectName(f"frame_{self.index}")
+            layout.setObjectName(f"layout_{self.index}")
+            frame.setFrameShape(QFrame.NoFrame)
+
+            # choice widget type
+            self.name_type(name, layout)
+            if ftype == "متن":
+                self.input_type(layout)
+            elif ftype == "عدد":
+                self.number_type(layout)
+
+
+            self.ui.form_frame.layout().addWidget(frame)
+            self.index += 1
+            
+
+    def name_type(self, name, layout):
+        label = QLabel(name)
+        label.setObjectName(f"label_{self.index}")
+        layout.addWidget(label)
+        layout.setStretchFactor(label, 1)
+
+    def input_type(self, layout):
+        line_edit = QLineEdit()
+        line_edit.setObjectName(f"line_edit_{self.index}")
+        layout.addWidget(line_edit)
+        layout.setStretchFactor(line_edit, 4)
+
+    def number_type(self, layout):
+        line_edit = QLineEdit()
+        line_edit.setObjectName(f"number_edit_{self.index}")
+        validator = QIntValidator()
+        validator.setLocale(QLocale(QLocale.English, QLocale.UnitedStates))  # Uses commas
+        line_edit.setValidator(validator)
+        layout.addWidget(line_edit)
+        layout.setStretchFactor(line_edit, 4)
+
+    def amount_type(self):
+        pass
+
+    def account_nubmer_type(self):
+        pass
+
+    def card_number_type(self):
+        pass
+
+    def shaba_number_type(self):
+        pass
+
+    def multichoice_type(self):
+        pass
+
+    def detail_type(self):
+        pass
+
+
+
+
+class DataViewForm:
+    def __init__(self):
+        pass
+
+
+# ==================
+# -- MultiChoice --
+# ==================
+class MultiChoiceCreateForm:
+    def __init__(self):
+        pass
+
+
+class MultiChoiceUpdateForm:
+    def __init__(self):
+        pass
+
+
+class MultiChoiceDeleteForm:
+    def __init__(self):
         pass

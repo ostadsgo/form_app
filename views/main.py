@@ -1,7 +1,13 @@
 import sys
 from pathlib import Path
 
-from PySide6.QtWidgets import QApplication, QMainWindow, QFrame, QVBoxLayout, QPushButton
+from PySide6.QtWidgets import (
+    QApplication,
+    QMainWindow,
+    QFrame,
+    QVBoxLayout,
+    QPushButton,
+)
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QAction
 
@@ -13,12 +19,16 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.init()
         self.layout = QVBoxLayout()
-        self.form = None
+        self.frame = None
 
         # Menubar
         self.menubar()
         self.main()
         self.statusbar()
+
+        # *Temperory* --> Test
+        self.load_data_insert_form()
+
 
     def init(self):
         self.setLayoutDirection(Qt.RightToLeft)
@@ -29,18 +39,20 @@ class MainWindow(QMainWindow):
         menubar = self.menuBar()
         menubar.setLayoutDirection(Qt.RightToLeft)
 
-        ### Form menu
-        form_menu = menubar.addMenu("فرم")
-        form_create_action = QAction("ایجاد فرم", self)
-        form_update_action = QAction("ویرایش فرم", self)
-        form_delete_action = QAction("حذف فرم", self)
-        form_menu.addActions([form_create_action, form_update_action, form_delete_action])
+        ### frame menu
+        table_from_menu = menubar.addMenu("فرم")
+        table_create_form_action = QAction("ایجاد فرم", self)
+        table_update_form_action = QAction("ویرایش فرم", self)
+        table_delete_form_action = QAction("حذف فرم", self)
+        table_from_menu.addActions(
+            [table_create_form_action, table_update_form_action, table_delete_form_action]
+        )
 
         ### Information menu
-        info_menu = menubar.addMenu("اطلاعات")
-        info_insert_action = QAction("افزودن اطلاعات", self)
-        info_display_action = QAction("نمایش اطلاعات", self)
-        info_menu.addActions([info_insert_action, info_display_action])
+        data_form_menu = menubar.addMenu("اطلاعات")
+        data_insert_from_action = QAction("افزودن اطلاعات", self)
+        data_view_from_action = QAction("نمایش اطلاعات", self)
+        data_form_menu.addActions([data_insert_from_action, data_view_from_action])
 
         ### Report Menu
         report_menu = menubar.addMenu("گزارشات")
@@ -55,7 +67,8 @@ class MainWindow(QMainWindow):
         help_menu.addActions([help_action, help_contact_action, help_about_action])
 
         ### EVENTS
-        form_create_action.triggered.connect(self.load_form_create)
+        table_create_form_action.triggered.connect(self.load_table_create_form)
+        data_insert_from_action.triggered.connect(self.load_data_insert_form)
 
     def main(self):
         mainframe = QFrame()
@@ -64,18 +77,25 @@ class MainWindow(QMainWindow):
 
         mainframe.setLayout(self.layout)
         self.setCentralWidget(mainframe)
-        self.load_form_create()
 
     def statusbar(self):
         pass
 
     def clear_mainframe(self, index=0):
-        self.layout.takeAt(index)
+        item = self.layout.takeAt(index)
+        if item:
+            item.widget().deleteLater()
 
-    def load_form_create(self):
+    def load_table_create_form(self):
         self.clear_mainframe()
-        self.form = forms.FormCreate()
-        self.layout.addWidget(self.form.ui)
+        self.frame = forms.TableCreateForm()
+        self.layout.addWidget(self.frame.ui)
+
+    def load_data_insert_form(self):
+        self.clear_mainframe()
+        self.frame = forms.DataInsertForm()
+        self.layout.addWidget(self.frame.ui)
+        print("insert")
 
     @classmethod
     def run(self):
