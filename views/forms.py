@@ -213,47 +213,40 @@ class DataInsertForm:
             if child.widget():
                 child.widget().deleteLater()
 
+    def continer(self):
+        frame = QFrame()
+        layout = QHBoxLayout(frame)
+        frame.setObjectName(f"frame_{self.index}")
+        layout.setObjectName(f"layout_{self.index}")
+        frame.setFrameShape(QFrame.NoFrame)
+        return frame, layout
+
     def build_form(self):
+        # TODO: Woun't work with persian number
         selected_form_name = self.ui.form_names.currentText()
         form_id = self.model.get_form_id(selected_form_name)
         fields = self.model.get_form_fields(form_id)
-        # a row in form
-        for name, ftype in fields:
-            # row frame
-            frame = QFrame()
-            layout = QHBoxLayout(frame)
-            frame.setObjectName(f"frame_{self.index}")
-            layout.setObjectName(f"layout_{self.index}")
-            frame.setFrameShape(QFrame.NoFrame)
+        # Types
+        field_type_handlers = {
+            "متن": self.input_type, 
+            "عدد": self.number_type,
+            "مبلغ": self.amount_type,
+            "شماره حساب": self.account_nubmer_type,
+            "شماره کارت": self.card_number_type,
+            "شماره شبا": self.shaba_number_type,
+            "چند گزینه": self.multichoice_type,
+            "توضیحات": self.detail_type
+        }
 
-            # choice widget type
+        for name, ftype in fields:
+            frame, layout = self.continer()
             self.name_type(name, layout)
-            # input field
-            if ftype == "متن": 
-                self.input_type(layout)
-            # number
-            elif ftype == "عدد":
-                self.number_type(layout)
-            # amount (money)
-            elif ftype == "مبلغ":
-                self.amount_type(layout)
-            # account number
-            elif ftype == "شماره حساب":
-                self.account_nubmer_type(layout)
-            # card number
-            elif ftype == "شماره کارت":
-                self.card_number_type(layout)
-            # shaba number
-            elif ftype == "شماره شبا":
-                self.shaba_number_type(layout)
-            # mutlitchoice
-            elif ftype == "چند گزینه":
-                self.multichoice_type(layout)
-            # detail 
-            elif ftype == "توضیحات":
-                self.detail_type(layout)
+            
+            handler = field_type_handlers.get(ftype)
+            if handler:
+                handler(layout)
             else:
-                print("Field type not recognized: no widget created for it.")
+                print(f"Field type not recognized: '{ftype}'. No widget created.")
 
             self.ui.form_frame.layout().addWidget(frame)
             self.index += 1
@@ -310,6 +303,20 @@ class DataInsertForm:
 
     def shaba_number_type(self, layout):
         """IRXX1234567890123456789012"""
+        line_edit = QLineEdit()
+        line_edit.setObjectName(f"card_number_{self.index}")
+        line_edit.setText("IR-")
+        line_edit.setMaxLength(26)  # IR + 2 + 22
+        # validation
+        line_edit.setValidator(self.number_validator())
+
+        line_edit.textChanged.connect(lambda: self.format_shaba(line_edit))
+        
+        layout.addWidget(line_edit)
+        layout.setStretchFactor(line_edit, 4)
+    
+    def shamsi_date_type(self, layout):
+        pass
 
     def detail_type(self, layout):
         pass
@@ -318,7 +325,7 @@ class DataInsertForm:
         pass
 
     def number_validator(self):
-        validator = QRegularExpressionValidator(QRegularExpression("[0-9]*"))
+        validator = QRegularExpressionValidator(QRegularExpression("[۰-۹]*"))
         return validator
 
     def format_number(self, line_edit):
@@ -338,6 +345,14 @@ class DataInsertForm:
         for i in range(0, len(text), 4):
             formatted += text[i:i+4] + "-"
         line_edit.setText(formatted[:-1])  # Remove trailing 
+
+    def format_shaba(self, line_edit):
+        text = line_edit.text()
+        print(text)
+        # if not text.startswith("IR-"):
+        #     line_edit.setText("IR-" + text.replace("IR-", ""))
+        # if len(text) < 3:  # If somehow prefix gets deleted
+        #     line_edit.setText("IR-")
  
 
 
