@@ -19,9 +19,10 @@ from PySide6.QtWidgets import (
     QScrollArea,
     QSizePolicy,
 )
-from PySide6.QtCore import Qt, QLocale
+from PySide6.QtCore import Qt, QLocale, QRegularExpression
 from PySide6.QtUiTools import QUiLoader
-from PySide6.QtGui import QIntValidator
+from PySide6.QtGui import QIntValidator, QRegularExpressionValidator
+
 # Project
 from views import utils
 from db import models
@@ -227,16 +228,36 @@ class DataInsertForm:
 
             # choice widget type
             self.name_type(name, layout)
-            if ftype == "متن":
+            # input field
+            if ftype == "متن": 
                 self.input_type(layout)
+            # number
             elif ftype == "عدد":
                 self.number_type(layout)
-
+            # amount (money)
+            elif ftype == "مبلغ":
+                self.amount_type(layout)
+            # account number
+            elif ftype == "شماره حساب":
+                self.account_nubmer_type(layout)
+            # card number
+            elif ftype == "شماره کارت":
+                self.card_number_type(layout)
+            # shaba number
+            elif ftype == "شماره شبا":
+                self.shaba_number_type(layout)
+            # mutlitchoice
+            elif ftype == "چند گزینه":
+                self.multichoice_type(layout)
+            # detail 
+            elif ftype == "توضیحات":
+                self.detail_type(layout)
+            else:
+                print("Field type not recognized: no widget created for it.")
 
             self.ui.form_frame.layout().addWidget(frame)
             self.index += 1
             
-
     def name_type(self, name, layout):
         label = QLabel(name)
         label.setObjectName(f"label_{self.index}")
@@ -244,37 +265,87 @@ class DataInsertForm:
         layout.setStretchFactor(label, 1)
 
     def input_type(self, layout):
+        """ abc123 """
         line_edit = QLineEdit()
         line_edit.setObjectName(f"line_edit_{self.index}")
         layout.addWidget(line_edit)
         layout.setStretchFactor(line_edit, 4)
 
     def number_type(self, layout):
+        """12341212"""
         line_edit = QLineEdit()
         line_edit.setObjectName(f"number_edit_{self.index}")
-        validator = QIntValidator()
-        validator.setLocale(QLocale(QLocale.English, QLocale.UnitedStates))  # Uses commas
-        line_edit.setValidator(validator)
+        line_edit.setValidator(self.number_validator())
         layout.addWidget(line_edit)
         layout.setStretchFactor(line_edit, 4)
 
-    def amount_type(self):
+    def amount_type(self, layout):
+        """ 123,000,000"""
+        line_edit = QLineEdit()
+        line_edit.setObjectName(f"amount_edit_{self.index}")
+        line_edit.setValidator(self.number_validator())
+        line_edit.textEdited.connect(lambda: self.format_number(line_edit))
+        layout.addWidget(line_edit)
+        layout.setStretchFactor(line_edit, 4)
+
+    def account_nubmer_type(self, layout):
+        """ 1234-1234-1234-1234 """
+        line_edit = QLineEdit()
+        line_edit.setObjectName(f"account_number_edit_{self.index}")
+        line_edit.setMaxLength(19)  # 16 digits + 3 dashes
+        line_edit.setValidator(self.number_validator())
+        line_edit.textEdited.connect(lambda: self.format_account_number(line_edit))
+        layout.addWidget(line_edit)
+        layout.setStretchFactor(line_edit, 4)
+
+    def card_number_type(self, layout):
+        """ 1234-1234-1234-1234 """
+        line_edit = QLineEdit()
+        line_edit.setObjectName(f"card_number_{self.index}")
+        line_edit.setMaxLength(19)  # 16 digits + 3 dashes
+        line_edit.setValidator(self.number_validator())
+        line_edit.textEdited.connect(lambda: self.format_card_number(line_edit))
+        layout.addWidget(line_edit)
+        layout.setStretchFactor(line_edit, 4)
+
+    def shaba_number_type(self, layout):
+        """IRXX1234567890123456789012"""
+
+    def detail_type(self, layout):
+        pass
+    
+    def multichoice_type(self, layout):
         pass
 
-    def account_nubmer_type(self):
+    def number_validator(self):
+        validator = QRegularExpressionValidator(QRegularExpression("[0-9]*"))
+        return validator
+
+    def format_number(self, line_edit):
+        text = line_edit.text().replace(",", "")
+        line_edit.setText("{:,}".format(int(text)))
+
+    def format_account_number(self, line_edit):
+        # cursor_pos = self.cursorPosition()
+        # text = line_edit.text().replace("-", "")
+        # line_edit.setText("{:,}".format(int(text)))
+        # line_edit.setCursorPosition(cursor_pos + (len(formatted) - len(text)))
         pass
 
-    def card_number_type(self):
-        pass
+    def format_card_number(self, line_edit):
+        text = line_edit.text().replace("-", "")[:16]  # Remove dashes and limit to 16 chars
+        formatted = ""
+        for i in range(0, len(text), 4):
+            formatted += text[i:i+4] + "-"
+        line_edit.setText(formatted[:-1])  # Remove trailing 
+ 
 
-    def shaba_number_type(self):
-        pass
 
-    def multichoice_type(self):
-        pass
 
-    def detail_type(self):
-        pass
+
+
+ 
+
 
 
 
