@@ -3,6 +3,7 @@ like form creation, updating, deleting and etc.
 """
 
 # Builtins
+import os
 from pathlib import Path
 
 # External
@@ -29,6 +30,7 @@ import pandas as pd
 from views import utils
 from db import models
 
+BASE_DIR = Path(__file__).parent.parent
 
 class UI:
     BASE_DIR = Path(__file__).parent.parent
@@ -193,12 +195,14 @@ class TableDeleteForm:
 # -- Data --
 # ==================
 class DataInsertForm:
+    DATA_DIR = BASE_DIR / "data"
     def __init__(self):
         self.ui = UI.load_ui("insert.ui")
         self.model = models.DataModel()
         self.index = 0
         self.header = []
         self.rows = []
+        self.data = []
 
 
         # get form names and set it to combobox
@@ -210,9 +214,16 @@ class DataInsertForm:
         # on save
         self.ui.save_button.clicked.connect(self.on_save)
 
-    def empty_body(self):
-        for frame in self.row_frames():
-            frame.deleteLater()
+    def clear_form_content(self):
+        for widgets in self.rows:
+            for widget in widgets:
+                if isinstance(widget, QLineEdit):
+                    widget.clear()
+                elif isinstance(widget, QLineEdit):
+                    widget.clear()
+                else:
+                    print(f"Uknow widget to clear content of it {widget}")
+
 
     def row_frames(self):
         """Get all field frame in fields_frame"""
@@ -234,34 +245,14 @@ class DataInsertForm:
                         flat = True
         return flag
 
-    # def header(self):
-    #     x = []
-    #     for frame in self.row_frames():
-    #         t = frame.findChildren(QLabel).text()
-    #         x.append(t)
-
-    # def rows(self):
-    #     rows = []
-    #     # rows
-    #     for frame in self.row_frames():
-    #         row = []
-    #         # row
-    #         for child in frame.findChildren(QWidget):
-    #             if isinstance(child, QLineEdit):
-    #                 row.append(child.text())
-    #             elif isinstance(child, QComboBox):
-    #                 row.append(child.currentText())
-    #             elif isinstance(child, QText):
-    #                 row.append(child.toPlainText())
-    #             else:
-    #                 print(f"Can't get the wiget data. {child}")
-    #         rows.append(row)
-    #     return rows
-
     def get_header(self):
         return [label.text() for label in self.header]
 
-    def get_rows(self):
+    def get_row(self):
+        """ list contain data of a form.
+            each field store as element of list
+            ex: ["John", "1234-4445-3333-1231", "1234555555"]
+        """
         data = []
 
         for widgets in self.rows:
@@ -271,31 +262,46 @@ class DataInsertForm:
                     row.append(widget.text())
                 elif isinstance(widget, QComboBox):
                     row.append(widget.currentText())
-                elif isinstance(widget, QText):
+                elif isinstance(widget, QTextEdit):
                     row.append(widget.toPlainText())
                 else:
                     print(f"Can't get the wiget data. {child}")
             data.append(row)
+
+        # join row that have more that one widget
+        data = ["-".join(row) for row in data]
         return data
 
     def on_save(self):
         header = self.get_header()
-        data = self.get_rows()
-        print(data)
+        row = self.get_row()
         if self.is_empty():
             return
 
-        #fid = self.model.get_form_id
-        
+        selected_form_name = self.ui.form_names.currentText()
+        fid = self.model.get_form_id(selected_form_name)
+        csv_file = f"{fid}.csv"
 
-    def save_csv(self, filename, header, data):
-        df = pd.DataFrame(data)
-        df.to_csv(filename, header=header, data=data)
+        if self.is_csv_exist(csv_file):
+            self.append_csv(csv_file, row)
+        else:
+            self.create_csv(csv_file, header)
+            self.append_csv(csv_file, row)
 
+        # After save: delete inserted data to able to add new data.
+        self.clear_form_content()
 
+    def is_csv_exist(self, filename):
+        print(filename in os.listdir(self.DATA_DIR))
+        return filename in os.listdir(self.DATA_DIR)
 
-                    
+    def create_csv(self, filename, header):
+        pd.DataFrame(columns=header).to_csv(self.DATA_DIR/filename, index=False)
 
+    def append_csv(self, filename, row):
+        df = pd.DataFrame([row])
+        df.to_csv(self.DATA_DIR / filename, mode="a", index=False, header=False)
+        print(f"{self.DATA_DIR}/{filename} saved.")
 
     def on_form_name_select(self):
         # delete form_frame if there is a form
@@ -317,6 +323,8 @@ class DataInsertForm:
         return frame, layout
 
     def build_form(self):
+        self.header = []
+        self.rows = []
         selected_form_name = self.ui.form_names.currentText()
         form_id = self.model.get_form_id(selected_form_name)
         fields = self.model.get_form_fields(form_id)
@@ -401,7 +409,7 @@ class DataInsertForm:
             self.index += 1
             layout.addWidget(e)
             layout.setStretchFactor(e, 3)
-        self.rows.append(edits)
+        self.rows.append(edits[::-1])
 
     def card_number_type(self, layout):
         """ 1234-1234-1234-1234 """
@@ -418,7 +426,7 @@ class DataInsertForm:
             self.index += 1
             layout.addWidget(e)
             layout.setStretchFactor(e, 3)
-        self.rows.append(edits)
+        self.rows.append(edits[::-1])
 
     def shaba_number_type(self, layout):
         """IRXX1234567890123456789012"""
@@ -457,7 +465,8 @@ class DataInsertForm:
         layout.setStretchFactor(e6, 6)
         layout.setStretchFactor(e7, 6)
         layout.setStretchFactor(e8, 1)
-        self.rows.append(edits)
+        # we must do this.
+        self.rows.append(edits[::-1])
 
     def shamsi_date_type(self, layout):
         """ Year - Month - Day """
@@ -489,7 +498,7 @@ class DataInsertForm:
         layout.addWidget(d)
         layout.addWidget(m)
         layout.addWidget(y)
-        self.rows.append([d, m, y])
+        self.rows.append([y, m, d])
 
     def detail_type(self, layout):
         """ Text widget ."""
