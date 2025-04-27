@@ -79,3 +79,4 @@ change naming stuff.
 TODO:
 What if some fields were not required in this app we check all the time field
 to be required.
+would be nice select today data to shamsi data time field

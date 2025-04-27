@@ -23,6 +23,7 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Qt, QLocale, QRegularExpression
 from PySide6.QtUiTools import QUiLoader
 from PySide6.QtGui import QIntValidator, QRegularExpressionValidator
+import pandas as pd
 
 # Project
 from views import utils
@@ -196,6 +197,9 @@ class DataInsertForm:
         self.ui = UI.load_ui("insert.ui")
         self.model = models.DataModel()
         self.index = 0
+        self.header = []
+        self.rows = []
+
 
         # get form names and set it to combobox
         names = self.model.get_form_names()
@@ -230,49 +234,68 @@ class DataInsertForm:
                         flat = True
         return flag
 
-        # for name in self.names():
-        #     name.setStyleSheet("")
-        #     if not name.text().strip():
-        #         name.setStyleSheet("border: 2px solid red;")
-        #         name.setFocus()
-        #         return True
-        # return False
+    # def header(self):
+    #     x = []
+    #     for frame in self.row_frames():
+    #         t = frame.findChildren(QLabel).text()
+    #         x.append(t)
 
-    def rows(self):
-        rows = []
-        # rows
-        for frame in self.row_frames():
+    # def rows(self):
+    #     rows = []
+    #     # rows
+    #     for frame in self.row_frames():
+    #         row = []
+    #         # row
+    #         for child in frame.findChildren(QWidget):
+    #             if isinstance(child, QLineEdit):
+    #                 row.append(child.text())
+    #             elif isinstance(child, QComboBox):
+    #                 row.append(child.currentText())
+    #             elif isinstance(child, QText):
+    #                 row.append(child.toPlainText())
+    #             else:
+    #                 print(f"Can't get the wiget data. {child}")
+    #         rows.append(row)
+    #     return rows
+
+    def get_header(self):
+        return [label.text() for label in self.header]
+
+    def get_rows(self):
+        data = []
+
+        for widgets in self.rows:
             row = []
-            # row
-            for child in frame.findChildren(QWidget):
-                if isinstance(child, QLineEdit):
-                    row.append(child.text())
-                elif isinstance(child, QComboBox):
-                    row.append(child.currentText())
-                elif isinstance(child, QText):
-                    row.append(child.toPlainText())
+            for widget in widgets:
+                if isinstance(widget, QLineEdit):
+                    row.append(widget.text())
+                elif isinstance(widget, QComboBox):
+                    row.append(widget.currentText())
+                elif isinstance(widget, QText):
+                    row.append(widget.toPlainText())
                 else:
                     print(f"Can't get the wiget data. {child}")
-            rows.append(row)
-        return rows
+            data.append(row)
+        return data
 
     def on_save(self):
+        header = self.get_header()
+        data = self.get_rows()
+        print(data)
         if self.is_empty():
             return
 
-        rows = self.rows
+        #fid = self.model.get_form_id
+        
+
+    def save_csv(self, filename, header, data):
+        df = pd.DataFrame(data)
+        df.to_csv(filename, header=header, data=data)
+
+
 
                     
 
-
-        # check fields to be filled.
-
-
-        # get values of each field
-
-        # Create and save data in csv format.
-
-        ...
 
     def on_form_name_select(self):
         # delete form_frame if there is a form
@@ -330,31 +353,36 @@ class DataInsertForm:
         label.setObjectName(f"label_{self.index}")
         layout.addWidget(label)
         layout.setStretchFactor(label, 1)
+        self.header.append(label)
 
     def input_type(self, layout):
         """ abc123 """
-        line_edit = QLineEdit()
-        line_edit.setObjectName(f"line_edit_{self.index}")
-        layout.addWidget(line_edit)
-        layout.setStretchFactor(line_edit, 3)
+        e = QLineEdit()
+        e.setObjectName(f"line_edit_{self.index}")
+        layout.addWidget(e)
+        layout.setStretchFactor(e, 3)
+        self.rows.append([e])
+
 
     def number_type(self, layout):
         """12341212"""
-        line_edit = QLineEdit()
-        line_edit.setObjectName(f"number_edit_{self.index}")
-        line_edit.setValidator(self.number_validator())
-        layout.addWidget(line_edit)
-        layout.setStretchFactor(line_edit, 4)
+        e = QLineEdit()
+        e.setObjectName(f"number_edit_{self.index}")
+        e.setValidator(self.number_validator())
+        layout.addWidget(e)
+        layout.setStretchFactor(e, 4)
+        self.rows.append([e])
 
     def amount_type(self, layout):
         """ 123,000,000"""
         # TODO: it has bug not sperate properly.
-        line_edit = QLineEdit()
-        line_edit.setObjectName(f"amount_edit_{self.index}")
-        line_edit.setValidator(self.number_validator())
-        line_edit.textEdited.connect(lambda: self.format_amount(line_edit))
-        layout.addWidget(line_edit)
-        layout.setStretchFactor(line_edit, 4)
+        e = QLineEdit()
+        e.setObjectName(f"amount_edit_{self.index}")
+        e.setValidator(self.number_validator())
+        e.textEdited.connect(lambda: self.format_amount(e))
+        layout.addWidget(e)
+        layout.setStretchFactor(e, 4)
+        self.rows.append([e])
 
     def account_nubmer_type(self, layout):
         # jump to next lineedit after fill 4 numbers
@@ -373,6 +401,7 @@ class DataInsertForm:
             self.index += 1
             layout.addWidget(e)
             layout.setStretchFactor(e, 3)
+        self.rows.append(edits)
 
     def card_number_type(self, layout):
         """ 1234-1234-1234-1234 """
@@ -389,6 +418,7 @@ class DataInsertForm:
             self.index += 1
             layout.addWidget(e)
             layout.setStretchFactor(e, 3)
+        self.rows.append(edits)
 
     def shaba_number_type(self, layout):
         """IRXX1234567890123456789012"""
@@ -402,8 +432,8 @@ class DataInsertForm:
         e6 = QLineEdit()
         e7 = QLineEdit()
         e8 = QLineEdit()
-        e8.setText("IR")
-        e8.setEnabled(False)
+        e1.setText("IR")
+        e1.setEnabled(False)
         edits.extend([e8, e7, e6, e5, e4, e3, e2, e1])
         for e in edits:
             e.setObjectName(f"shaba_number_{self.index}")
@@ -427,7 +457,8 @@ class DataInsertForm:
         layout.setStretchFactor(e6, 6)
         layout.setStretchFactor(e7, 6)
         layout.setStretchFactor(e8, 1)
-    
+        self.rows.append(edits)
+
     def shamsi_date_type(self, layout):
         """ Year - Month - Day """
         y = QComboBox()
@@ -458,17 +489,18 @@ class DataInsertForm:
         layout.addWidget(d)
         layout.addWidget(m)
         layout.addWidget(y)
+        self.rows.append([d, m, y])
 
     def detail_type(self, layout):
         """ Text widget ."""
         text = QTextEdit()
         text.setObjectName(f"text_{self.index}")
         layout.addWidget(text)
+        self.rows.append([text])
 
 
     def multichoice_type(self, layout):
         pass
-
 
     def phone_type(self, layout):
         e = QLineEdit()
@@ -476,6 +508,7 @@ class DataInsertForm:
         e.setMaxLength(11)
         e.setValidator(self.number_validator())
         layout.addWidget(e)
+        self.rows.append([e])
 
     def code_meli_type(self, layout):
         e = QLineEdit()
@@ -483,6 +516,7 @@ class DataInsertForm:
         e.setMaxLength(10)
         e.setValidator(self.number_validator())
         layout.addWidget(e)
+        self.rows.append([e])
 
     def number_validator(self):
         validator = QRegularExpressionValidator(QRegularExpression("[۰-۹]*"))
