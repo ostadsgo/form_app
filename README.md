@@ -76,4 +76,6 @@ not forms there are tables with columns the term fields refer to columns in
 form row user add column name column types and other stuff so i might need to
 change naming stuff.
 
-
+TODO:
+What if some fields were not required in this app we check all the time field
+to be required.

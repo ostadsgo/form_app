@@ -120,7 +120,7 @@
        <number>5</number>
       </property>
       <item alignment="Qt::AlignmentFlag::AlignTop">
-       <widget class="QFrame" name="form_frame">
+       <widget class="QFrame" name="body">
         <property name="frameShape">
          <enum>QFrame::Shape::NoFrame</enum>
         </property>
@@ -174,7 +174,7 @@
        <number>0</number>
       </property>
       <item>
-       <widget class="QPushButton" name="add_button">
+       <widget class="QPushButton" name="save_button">
         <property name="text">
          <string>ذخیره</string>
         </property>

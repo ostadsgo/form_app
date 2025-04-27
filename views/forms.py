@@ -18,6 +18,7 @@ from PySide6.QtWidgets import (
     QCheckBox,
     QScrollArea,
     QSizePolicy,
+    QTextEdit,
 )
 from PySide6.QtCore import Qt, QLocale, QRegularExpression
 from PySide6.QtUiTools import QUiLoader
@@ -202,6 +203,77 @@ class DataInsertForm:
         self.ui.form_names.setCurrentText("")
         self.ui.form_names.currentTextChanged.connect(self.on_form_name_select)
 
+        # on save
+        self.ui.save_button.clicked.connect(self.on_save)
+
+    def empty_body(self):
+        for frame in self.row_frames():
+            frame.deleteLater()
+
+    def row_frames(self):
+        """Get all field frame in fields_frame"""
+        return self.ui.body.findChildren(QFrame, options=Qt.FindDirectChildrenOnly)
+
+    def is_empty(self):
+        """Check all field name widgets to not be empty."""
+
+        flag = False
+        for frame in self.row_frames():
+            for child in frame.findChildren(QWidget):
+                child.setStyleSheet("")
+
+        for frame in self.row_frames():
+            for child in frame.findChildren(QWidget):
+                if isinstance(child, QLineEdit):
+                    if not child.text().strip():
+                        child.setStyleSheet("border: 2px solid red;")
+                        flat = True
+        return flag
+
+        # for name in self.names():
+        #     name.setStyleSheet("")
+        #     if not name.text().strip():
+        #         name.setStyleSheet("border: 2px solid red;")
+        #         name.setFocus()
+        #         return True
+        # return False
+
+    def rows(self):
+        rows = []
+        # rows
+        for frame in self.row_frames():
+            row = []
+            # row
+            for child in frame.findChildren(QWidget):
+                if isinstance(child, QLineEdit):
+                    row.append(child.text())
+                elif isinstance(child, QComboBox):
+                    row.append(child.currentText())
+                elif isinstance(child, QText):
+                    row.append(child.toPlainText())
+                else:
+                    print(f"Can't get the wiget data. {child}")
+            rows.append(row)
+        return rows
+
+    def on_save(self):
+        if self.is_empty():
+            return
+
+        rows = self.rows
+
+                    
+
+
+        # check fields to be filled.
+
+
+        # get values of each field
+
+        # Create and save data in csv format.
+
+        ...
+
     def on_form_name_select(self):
         # delete form_frame if there is a form
         self.clear_form()
@@ -222,33 +294,35 @@ class DataInsertForm:
         return frame, layout
 
     def build_form(self):
-        # TODO: Woun't work with persian number
         selected_form_name = self.ui.form_names.currentText()
         form_id = self.model.get_form_id(selected_form_name)
         fields = self.model.get_form_fields(form_id)
         # Types
         field_type_handlers = {
-            "متن": self.input_type, 
-            "عدد": self.number_type,
-            "مبلغ": self.amount_type,
+            "متن": self.input_type,  # Done
+            "عدد": self.number_type, # Done
+            "مبلغ": self.amount_type, # Done
             "شماره حساب": self.account_nubmer_type,
             "شماره کارت": self.card_number_type,
             "شماره شبا": self.shaba_number_type,
+            "توضیحات": self.detail_type,
+            "تاریخ شمسی": self.shamsi_date_type,
+            "شماره تماس": self.phone_type,
+            "کد ملی": self.code_meli_type,
             "چند گزینه": self.multichoice_type,
-            "توضیحات": self.detail_type
+
         }
 
         for name, ftype in fields:
             frame, layout = self.continer()
             self.name_type(name, layout)
             
-            handler = field_type_handlers.get(ftype)
-            if handler:
+            if handler := field_type_handlers.get(ftype):
                 handler(layout)
             else:
                 print(f"Field type not recognized: '{ftype}'. No widget created.")
 
-            self.ui.form_frame.layout().addWidget(frame)
+            self.ui.body.layout().addWidget(frame)
             self.index += 1
             
     def name_type(self, name, layout):
@@ -262,7 +336,7 @@ class DataInsertForm:
         line_edit = QLineEdit()
         line_edit.setObjectName(f"line_edit_{self.index}")
         layout.addWidget(line_edit)
-        layout.setStretchFactor(line_edit, 4)
+        layout.setStretchFactor(line_edit, 3)
 
     def number_type(self, layout):
         """12341212"""
@@ -274,94 +348,153 @@ class DataInsertForm:
 
     def amount_type(self, layout):
         """ 123,000,000"""
+        # TODO: it has bug not sperate properly.
         line_edit = QLineEdit()
         line_edit.setObjectName(f"amount_edit_{self.index}")
         line_edit.setValidator(self.number_validator())
-        line_edit.textEdited.connect(lambda: self.format_number(line_edit))
+        line_edit.textEdited.connect(lambda: self.format_amount(line_edit))
         layout.addWidget(line_edit)
         layout.setStretchFactor(line_edit, 4)
 
     def account_nubmer_type(self, layout):
+        # jump to next lineedit after fill 4 numbers
+        # TODO: remeber order of line edits when grabing data
         """ 1234-1234-1234-1234 """
-        line_edit = QLineEdit()
-        line_edit.setObjectName(f"account_number_edit_{self.index}")
-        line_edit.setMaxLength(19)  # 16 digits + 3 dashes
-        line_edit.setValidator(self.number_validator())
-        line_edit.textEdited.connect(lambda: self.format_account_number(line_edit))
-        layout.addWidget(line_edit)
-        layout.setStretchFactor(line_edit, 4)
+        edits = []
+        e1 = QLineEdit()
+        e2 = QLineEdit()
+        e3 = QLineEdit()
+        e4 = QLineEdit()
+        edits.extend([e4, e3, e2, e1])
+        for e in edits:
+            e.setObjectName(f"account_number_{self.index}")
+            e.setMaxLength(4)  # 16 digits + 3 dashes
+            e.setValidator(self.number_validator())
+            self.index += 1
+            layout.addWidget(e)
+            layout.setStretchFactor(e, 3)
 
     def card_number_type(self, layout):
         """ 1234-1234-1234-1234 """
-        line_edit = QLineEdit()
-        line_edit.setObjectName(f"card_number_{self.index}")
-        line_edit.setMaxLength(19)  # 16 digits + 3 dashes
-        line_edit.setValidator(self.number_validator())
-        line_edit.textEdited.connect(lambda: self.format_card_number(line_edit))
-        layout.addWidget(line_edit)
-        layout.setStretchFactor(line_edit, 4)
+        edits = []
+        e1 = QLineEdit()
+        e2 = QLineEdit()
+        e3 = QLineEdit()
+        e4 = QLineEdit()
+        edits.extend([e4, e3, e2, e1])
+        for e in edits:
+            e.setObjectName(f"card_number_{self.index}")
+            e.setMaxLength(4)  # 16 digits + 3 dashes
+            e.setValidator(self.number_validator())
+            self.index += 1
+            layout.addWidget(e)
+            layout.setStretchFactor(e, 3)
 
     def shaba_number_type(self, layout):
         """IRXX1234567890123456789012"""
-        line_edit = QLineEdit()
-        line_edit.setObjectName(f"card_number_{self.index}")
-        line_edit.setText("IR-")
-        line_edit.setMaxLength(26)  # IR + 2 + 22
-        # validation
-        line_edit.setValidator(self.number_validator())
-
-        line_edit.textChanged.connect(lambda: self.format_shaba(line_edit))
+        edits = []
+        # Widgets
+        e1 = QLineEdit()
+        e2 = QLineEdit()
+        e3 = QLineEdit()
+        e4 = QLineEdit()
+        e5 = QLineEdit()
+        e6 = QLineEdit()
+        e7 = QLineEdit()
+        e8 = QLineEdit()
+        e8.setText("IR")
+        e8.setEnabled(False)
+        edits.extend([e8, e7, e6, e5, e4, e3, e2, e1])
+        for e in edits:
+            e.setObjectName(f"shaba_number_{self.index}")
+            e.setMaxLength(4) 
+            layout.addWidget(e)
+            self.index += 1 
+        # Validation
+        e1.setValidator(self.number_validator())
+        e2.setValidator(self.number_validator())
+        e3.setValidator(self.number_validator())
+        e4.setValidator(self.number_validator())
+        e5.setValidator(self.number_validator())
+        e6.setValidator(self.number_validator())
+        e7.setValidator(self.number_validator())
         
-        layout.addWidget(line_edit)
-        layout.setStretchFactor(line_edit, 4)
+        layout.setStretchFactor(e1, 1)
+        layout.setStretchFactor(e2, 6)
+        layout.setStretchFactor(e3, 6)
+        layout.setStretchFactor(e4, 6)
+        layout.setStretchFactor(e5, 6)
+        layout.setStretchFactor(e6, 6)
+        layout.setStretchFactor(e7, 6)
+        layout.setStretchFactor(e8, 1)
     
     def shamsi_date_type(self, layout):
-        pass
+        """ Year - Month - Day """
+        y = QComboBox()
+        m = QComboBox()
+        d = QComboBox()
+        y.setObjectName("shamsi_year_{self.index}")
+        m.setObjectName("shamsi_month{self.index}")
+        d.setObjectName("shamsi_day{self.index}")
+        months_shamsi = [
+        "فروردین",
+        "اردیبهشت",
+        "خرداد",
+        "تیر",
+        "مرداد",
+        "شهریور",
+        "مهر",
+        "آبان",
+        "آذر",
+        "دی",
+        "بهمن",
+        "اسفند"
+        ]
+        y.addItems([str(i) for i in range(1390, 1410)])
+        y.setCurrentText(str(1404))
+        m.addItems(months_shamsi)
+        d.addItems([str(i) for i in range(1, 32)])
+
+        layout.addWidget(d)
+        layout.addWidget(m)
+        layout.addWidget(y)
 
     def detail_type(self, layout):
-        pass
-    
+        """ Text widget ."""
+        text = QTextEdit()
+        text.setObjectName(f"text_{self.index}")
+        layout.addWidget(text)
+
+
     def multichoice_type(self, layout):
         pass
+
+
+    def phone_type(self, layout):
+        e = QLineEdit()
+        e.setObjectName(f"phone_number_{self.index}")
+        e.setMaxLength(11)
+        e.setValidator(self.number_validator())
+        layout.addWidget(e)
+
+    def code_meli_type(self, layout):
+        e = QLineEdit()
+        e.setObjectName(f"code_meli_{self.index}")
+        e.setMaxLength(10)
+        e.setValidator(self.number_validator())
+        layout.addWidget(e)
 
     def number_validator(self):
         validator = QRegularExpressionValidator(QRegularExpression("[۰-۹]*"))
         return validator
 
-    def format_number(self, line_edit):
-        text = line_edit.text().replace(",", "")
-        line_edit.setText("{:,}".format(int(text)))
-
-    def format_account_number(self, line_edit):
-        # cursor_pos = self.cursorPosition()
-        # text = line_edit.text().replace("-", "")
-        # line_edit.setText("{:,}".format(int(text)))
-        # line_edit.setCursorPosition(cursor_pos + (len(formatted) - len(text)))
-        pass
-
-    def format_card_number(self, line_edit):
-        text = line_edit.text().replace("-", "")[:16]  # Remove dashes and limit to 16 chars
-        formatted = ""
-        for i in range(0, len(text), 4):
-            formatted += text[i:i+4] + "-"
-        line_edit.setText(formatted[:-1])  # Remove trailing 
-
-    def format_shaba(self, line_edit):
+    def format_amount(self, line_edit):
         text = line_edit.text()
-        print(text)
-        # if not text.startswith("IR-"):
-        #     line_edit.setText("IR-" + text.replace("IR-", ""))
-        # if len(text) < 3:  # If somehow prefix gets deleted
-        #     line_edit.setText("IR-")
- 
-
-
-
-
-
- 
-
-
+        text = text.replace(",", "")
+        cursor_pos = line_edit.cursorPosition()
+        formatted = ",".join([text[i:i+3] for i in range(0, len(text), 3)])
+        line_edit.setText(formatted)
+        line_edit.setCursorPosition(cursor_pos + formatted.count(","))
 
 
 
