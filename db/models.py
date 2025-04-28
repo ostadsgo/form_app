@@ -101,12 +101,15 @@ class DataModel:
         fid = self.db.fetch_one(sql, (name,))
         return fid[0]
 
+    def get_form_name(self, fid):
+        sql = """ SELECT name FROM forms WHERE id = (?); """
+        form_name = self.db.fetch_one(sql, (fid,))
+        return form_name[0]
+
+
     def get_form_fields(self, fid):
         sql = """ SELECT * FROM fields WHERE form_id = (?); """
         fields = self.db.fetch_all(sql, (fid,))
         # Field name and field type
         return [(field[1], field[2]) for field in fields]
-
-
-
 

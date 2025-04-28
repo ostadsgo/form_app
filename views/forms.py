@@ -20,6 +20,7 @@ from PySide6.QtWidgets import (
     QScrollArea,
     QSizePolicy,
     QTextEdit,
+    QTableWidgetItem,
 )
 from PySide6.QtCore import Qt, QLocale, QRegularExpression
 from PySide6.QtUiTools import QUiLoader
@@ -31,6 +32,7 @@ from views import utils
 from db import models
 
 BASE_DIR = Path(__file__).parent.parent
+DATA_DIR = BASE_DIR / "data"
 
 class UI:
     BASE_DIR = Path(__file__).parent.parent
@@ -290,6 +292,7 @@ class DataInsertForm:
 
         # After save: delete inserted data to able to add new data.
         self.clear_form_content()
+        print(f"{csv_file} Saved succesfully.")
 
     def is_csv_exist(self, filename):
         print(filename in os.listdir(self.DATA_DIR))
@@ -541,9 +544,46 @@ class DataInsertForm:
 
 
 
-class DataViewForm:
+class DataView:
     def __init__(self):
-        pass
+        self.ui = UI.load_ui("view.ui")
+        # load form names
+        files = os.listdir(DATA_DIR)
+        # extract form ids
+        form_ids = [int(file.removesuffix(".csv")) for file in files if file.endswith(".csv")]
+        # get form name
+        self.model = models.DataModel()
+        form_names = [self.model.get_form_name(fid) for fid in form_ids]
+        self.ui.form_names.addItems(form_names)
+        self.ui.form_names.currentTextChanged.connect(self.on_form_select)
+        self.rows = []
+
+    def on_form_select(self, form_name):
+        form_id = self.model.get_form_id(form_name)
+        csv_file = DATA_DIR / f"{form_id}.csv"
+        df = pd.read_csv(csv_file)
+        self.populate_to_table(df)
+
+    def populate_to_table(self,df):
+        table = self.ui.table
+        row_count = df.shape[0]
+        column_count = df.shape[1]
+        # table widget config
+        table.setRowCount(row_count)
+        table.setColumnCount(column_count)
+        table.setHorizontalHeaderLabels(df.columns.tolist())
+         # Populate the table with data
+        for row in range(row_count):
+            for col in range(column_count):
+                item = QTableWidgetItem(str(df.iat[row, col]))
+                table.setItem(row, col, item)
+
+        
+
+
+
+
+
 
 
 # ==================

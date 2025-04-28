@@ -27,7 +27,8 @@ class MainWindow(QMainWindow):
         self.statusbar()
 
         # *Temperory* --> Test
-        self.load_data_insert_form()
+        # self.load_data_insert_form()
+        self.load_data_view()
 
 
     def init(self):
@@ -49,10 +50,11 @@ class MainWindow(QMainWindow):
         )
 
         ### Information menu
-        data_form_menu = menubar.addMenu("اطلاعات")
-        data_insert_from_action = QAction("افزودن اطلاعات", self)
-        data_view_from_action = QAction("نمایش اطلاعات", self)
-        data_form_menu.addActions([data_insert_from_action, data_view_from_action])
+        data_form_menu = menubar.addMenu("داده")
+        data_insert_from_action = QAction("افزودن داده", self)
+        data_view_action = QAction("نمایش داده", self)
+        data_manage_action = QAction("مدیریت داده", self)
+        data_form_menu.addActions([data_insert_from_action, data_view_action, data_manage_action])
 
         ### Report Menu
         report_menu = menubar.addMenu("گزارشات")
@@ -69,6 +71,7 @@ class MainWindow(QMainWindow):
         ### EVENTS
         table_create_form_action.triggered.connect(self.load_table_create_form)
         data_insert_from_action.triggered.connect(self.load_data_insert_form)
+        data_view_action.triggered.connect(self.load_data_view)
 
     def main(self):
         mainframe = QFrame()
@@ -95,7 +98,13 @@ class MainWindow(QMainWindow):
         self.clear_mainframe()
         self.frame = forms.DataInsertForm()
         self.layout.addWidget(self.frame.ui)
-        print("insert")
+
+    def load_data_view(self):
+        self.clear_mainframe()
+        self.frame = forms.DataView()
+        self.layout.addWidget(self.frame.ui)
+        print("data view")
+
 
     @classmethod
     def run(self):

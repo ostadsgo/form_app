@@ -80,3 +80,6 @@ TODO:
 What if some fields were not required in this app we check all the time field
 to be required.
 would be nice select today data to shamsi data time field
+
+- Pandas make reading and writing csv to be slow. I should go with default
+python csv module
