@@ -21,6 +21,7 @@ from PySide6.QtWidgets import (
     QSizePolicy,
     QTextEdit,
     QTableWidgetItem,
+    QFileDialog,
 )
 from PySide6.QtCore import Qt, QLocale, QRegularExpression
 from PySide6.QtUiTools import QUiLoader
@@ -33,6 +34,8 @@ from db import models
 
 BASE_DIR = Path(__file__).parent.parent
 DATA_DIR = BASE_DIR / "data"
+print(BASE_DIR)
+print(DATA_DIR)
 
 class UI:
     BASE_DIR = Path(__file__).parent.parent
@@ -344,7 +347,6 @@ class DataInsertForm:
             "شماره تماس": self.phone_type,
             "کد ملی": self.code_meli_type,
             "چند گزینه": self.multichoice_type,
-
         }
 
         for name, ftype in fields:
@@ -556,6 +558,8 @@ class DataView:
         form_names = [self.model.get_form_name(fid) for fid in form_ids]
         self.ui.form_names.addItems(form_names)
         self.ui.form_names.currentTextChanged.connect(self.on_form_select)
+        self.ui.save_button.clicked.connect(self.on_save_table)
+        self.header = []
         self.rows = []
 
     def on_form_select(self, form_name):
@@ -563,6 +567,8 @@ class DataView:
         csv_file = DATA_DIR / f"{form_id}.csv"
         df = pd.read_csv(csv_file)
         self.populate_to_table(df)
+        self.ui.save_button.setEnabled(True)
+
 
     def populate_to_table(self,df):
         table = self.ui.table
@@ -572,21 +578,44 @@ class DataView:
         table.setRowCount(row_count)
         table.setColumnCount(column_count)
         table.setHorizontalHeaderLabels(df.columns.tolist())
+        self.header = df.columns.tolist()
          # Populate the table with data
         for row in range(row_count):
             for col in range(column_count):
                 item = QTableWidgetItem(str(df.iat[row, col]))
                 table.setItem(row, col, item)
 
+        # NOTE: reverse data before save make it LTR; The table is RTL
+        self.rows = [row[::-1] for row in df.values.tolist()]
+
+    def on_save_table(self):
+        if not self.rows:
+            print("There is no records to save!!!")
+            self.ui.save_button.setEnabled(False)
+            return
+
+        # There is Data: Save data
+        csv_filename, _ = QFileDialog.getSaveFileName(
+            None, 
+            "Save File", 
+            "file.csv",
+            "CSV Files (*.csv)"
+        )
+
+        print("filename: ", csv_filename)
+        if csv_filename:
+            # check if user add csv extention to filename
+            if not csv_filename.endswith(".csv"):
+                csv_filename += ".csv"
+
+            # save file which now has a name and csv extention
+            df = pd.DataFrame(self.rows, columns=self.header[::-1])
+            df.to_csv(csv_filename, index=False)
+            print(f"{csv_filename} saved succesfully.")
+
+
+
         
-
-
-
-
-
-
-
-# ==================
 # -- MultiChoice --
 # ==================
 class MultiChoiceCreateForm:
