@@ -247,7 +247,7 @@ class DataInsertForm:
                 if isinstance(child, QLineEdit):
                     if not child.text().strip():
                         child.setStyleSheet("border: 2px solid red;")
-                        flat = True
+                        flag = True
         return flag
 
     def get_header(self):
@@ -281,6 +281,9 @@ class DataInsertForm:
         header = self.get_header()
         row = self.get_row()
         if self.is_empty():
+            print('------------------')
+            print("form is empty?", self.is_empty())
+            print('------------------')
             return
 
         selected_form_name = self.ui.form_names.currentText()
@@ -545,8 +548,8 @@ class DataInsertForm:
         line_edit.setCursorPosition(cursor_pos + formatted.count(","))
 
 
-
-class DataView:
+# view/update/delete
+class DataManageUI:
     def __init__(self):
         self.ui = UI.load_ui("view.ui")
         # load form names
@@ -614,8 +617,6 @@ class DataView:
             print(f"{csv_filename} saved succesfully.")
 
 
-
-        
 # -- MultiChoice --
 # ==================
 class MultiChoiceCreateForm:

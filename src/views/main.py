@@ -101,7 +101,7 @@ class MainWindow(QMainWindow):
 
     def load_data_view(self):
         self.clear_mainframe()
-        self.frame = forms.DataView()
+        self.frame = forms.DataManageUI()
         self.layout.addWidget(self.frame.ui)
         print("data view")
 
