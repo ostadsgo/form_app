@@ -630,6 +630,7 @@ class DataManageUI:
         # delete everything in table
         self.ui.table.clear()
         self.populate_to_table(self.df)
+        print("refresh table.")
 
     def on_delete(self):
         selected_row = self.ui.table.currentRow()
@@ -692,6 +693,42 @@ class DataManageUI:
                         widget.setCurrentText(value)
                     else:
                         print(f"{widget} uknow to set value to it.")
+            button.clicked.connect(lambda: self.on_update_row(form.rows, selected_row))
+
+    def update_selected_row(self, selected_row, values):
+        for col, value in enumerate(values):
+            self.ui.table.setItem(selected_row, col, QTableWidgetItem(str(value)))
+
+    def on_update_row(self, rows, selected_row):
+        values = []
+        for widgets in rows:
+            value = []
+            for widget in widgets:
+                if isinstance(widget, QLineEdit):
+                    value.append(widget.text())
+                elif isinstance(widget, QComboBox):
+                    value.append(widget.currentText())
+                else:
+                    print(f"Cann't get of the value {widget}")
+            values.append(value)
+
+        values = ["-".join(v) for v in values]
+        self.update_selected_row(selected_row, values)
+        # close and delete win after doing update
+        self.win.close()
+        self.win.deleteLater()
+        # update dataframe
+        self.df.iloc[selected_row] = values
+        # update csv file and refresh tableo
+        self.save_table()
+        self.refresh_table()
+
+
+
+
+
+
+
 
 
 
