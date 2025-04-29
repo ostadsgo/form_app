@@ -22,6 +22,9 @@ from PySide6.QtWidgets import (
     QTextEdit,
     QTableWidgetItem,
     QFileDialog,
+    QMainWindow,
+    QVBoxLayout,
+    QPushButton,
 )
 from PySide6.QtCore import Qt, QLocale, QRegularExpression
 from PySide6.QtUiTools import QUiLoader
@@ -281,9 +284,6 @@ class DataInsertForm:
         header = self.get_header()
         row = self.get_row()
         if self.is_empty():
-            print('------------------')
-            print("form is empty?", self.is_empty())
-            print('------------------')
             return
 
         selected_form_name = self.ui.form_names.currentText()
@@ -315,7 +315,10 @@ class DataInsertForm:
     def on_form_name_select(self):
         # delete form_frame if there is a form
         self.clear_form()
-        self.build_form()
+        selected_form_name = self.ui.form_names.currentText()
+        form_id = self.model.get_form_id(selected_form_name)
+        fields = self.model.get_form_fields(form_id)
+        self.build_form(fields, self.ui.body)
 
     def clear_form(self):
         while self.ui.form_layout.count():
@@ -331,12 +334,11 @@ class DataInsertForm:
         frame.setFrameShape(QFrame.NoFrame)
         return frame, layout
 
-    def build_form(self):
+
+    def build_form(self, fields, base):
+        # base is the place frame will shown
         self.header = []
         self.rows = []
-        selected_form_name = self.ui.form_names.currentText()
-        form_id = self.model.get_form_id(selected_form_name)
-        fields = self.model.get_form_fields(form_id)
         # Types
         field_type_handlers = {
             "متن": self.input_type,  # Done
@@ -361,7 +363,7 @@ class DataInsertForm:
             else:
                 print(f"Field type not recognized: '{ftype}'. No widget created.")
 
-            self.ui.body.layout().addWidget(frame)
+            base.layout().addWidget(frame)
             self.index += 1
             
     def name_type(self, name, layout):
@@ -562,18 +564,21 @@ class DataManageUI:
         self.ui.form_names.addItems(form_names)
         self.ui.form_names.currentTextChanged.connect(self.on_form_select)
         self.ui.save_button.clicked.connect(self.on_save_table)
+        self.ui.delete_row.clicked.connect(self.on_delete)
+        self.ui.update_row.clicked.connect(self.on_update)
         self.header = []
         self.rows = []
+        self.csv_file = ""
 
     def on_form_select(self, form_name):
         form_id = self.model.get_form_id(form_name)
-        csv_file = DATA_DIR / f"{form_id}.csv"
-        df = pd.read_csv(csv_file)
-        self.populate_to_table(df)
+        self.csv_file = DATA_DIR / f"{form_id}.csv"
+        self.df = pd.read_csv(self.csv_file)
+        self.populate_to_table(self.df)
         self.ui.save_button.setEnabled(True)
 
 
-    def populate_to_table(self,df):
+    def populate_to_table(self, df):
         table = self.ui.table
         row_count = df.shape[0]
         column_count = df.shape[1]
@@ -615,6 +620,77 @@ class DataManageUI:
             df = pd.DataFrame(self.rows, columns=self.header[::-1])
             df.to_csv(csv_filename, index=False)
             print(f"{csv_filename} saved succesfully.")
+
+    def save_table(self):
+        self.df.to_csv(self.csv_file, index=False)
+        print("Re-Save table.")
+
+    def refresh_table(self):
+        # delete everything in table
+        self.ui.table.clear()
+        self.populate_to_table(self.df)
+
+    def on_delete(self):
+        selected_row = self.ui.table.currentRow()
+        if selected_row >= 0:  # -1 if no selection
+            self.ui.table.removeRow(selected_row)
+        self.df = self.df.drop(self.df.index[selected_row]).reset_index(drop=True)
+        self.save_table()
+        self.refresh_table()
+
+    def get_column_names(self):
+        column_names = [self.ui.table.horizontalHeaderItem(col).text() 
+                        for col in range(self.ui.table.columnCount())]
+        return column_names
+
+
+    def on_update(self):
+        selected_row = self.ui.table.currentRow()
+        # populate form with the selected row data
+        form = DataInsertForm()
+        fields = []
+        # detect fields type. and make pair
+        if selected_row >= 0:  # -1 if no selection
+            header = self.get_column_names()
+            # first row to detect fields type.
+            row = [self.ui.table.item(selected_row, col).text() 
+                   for col in range(self.ui.table.columnCount())]
+            for column, cell in zip(header, row):
+                minus_num = cell.count("-")
+                if minus_num == 2:  # date
+                    field = (column, "تاریخ شمسی")
+                elif minus_num == 4:
+                    field = (column, "شماره کارت")
+                elif minus_num == 8:
+                    field = (column, "شماره شبا")
+                else:
+                    field = (column, "متن")
+                fields.append(field)
+
+            # build form
+            self.win = QMainWindow()
+            self.win.setLayoutDirection(Qt.RightToLeft)
+            frame = QFrame()
+            layout = QVBoxLayout()
+            frame.setLayout(layout)
+            form.build_form(fields, frame)
+            # Add button at the bottom
+            button = QPushButton("ذخیره")
+            layout.addWidget(button)
+            layout.addStretch()  
+            self.win.setCentralWidget(frame)
+            self.win.show()
+
+
+
+
+
+
+
+
+
+
+
 
 
 # -- MultiChoice --
