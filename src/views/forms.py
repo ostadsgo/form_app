@@ -26,9 +26,9 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QPushButton,
 )
-from PySide6.QtCore import Qt, QLocale, QRegularExpression
+from PySide6.QtCore import Qt, QLocale, QRegularExpression, QStringListModel 
 from PySide6.QtUiTools import QUiLoader
-from PySide6.QtGui import QIntValidator, QRegularExpressionValidator
+from PySide6.QtGui import QIntValidator, QRegularExpressionValidator, QStandardItemModel, QStandardItem
 import pandas as pd
 
 # Project
@@ -285,20 +285,52 @@ class TableUpdateForm:
         self.model.update_form_fields(fields)
             
 
-
-
-        
-
-        
-        
-        
-        
-
-
-
 class TableDeleteForm:
-    def __init_(self):
-        pass
+    def __init__(self):
+        self.ui = UI.load_ui("delete.ui")
+        self.model = models.FormModel()
+        self.form_data = self.model.get_forms()
+
+        ### Table widget
+        # Set columns
+        self.ui.table.setColumnCount(2)
+        self.ui.table.setRowCount(len(self.form_data))
+        self.ui.table.setHorizontalHeaderLabels(["آی دی", "نام فرم"])
+        self.populate_table()
+
+        self.ui.delete_button.clicked.connect(self.on_delete)
+
+    def populate_table(self):
+        self.ui.table.setCurrentCell(0, 0)
+        
+        for row_index, form_row in enumerate(self.form_data):
+            form_id = form_row[0]
+            form_name = form_row[1]
+            self.ui.table.setItem(row_index, 0, QTableWidgetItem(str(form_id)))
+            self.ui.table.setItem(row_index, 1, QTableWidgetItem(form_name))
+
+    def clear_all_rows(self):
+        self.ui.table
+
+    def get_selected_row(self):
+        selected_row_index = self.ui.table.currentRow()
+        selected_row = [self.ui.table.item(selected_row_index, col).text() 
+                    for col in range(self.ui.table.columnCount())]
+        return selected_row
+
+    def delete_selected_row(self):
+        selected_row_index = self.ui.table.currentRow()
+        self.ui.table.removeRow(selected_row_index)
+
+    def on_delete(self):
+        form_id, form_name = self.get_selected_row()
+        # delete from table
+        self.delete_selected_row()
+        # delete operation on db
+        self.model.delete_form(form_id)
+
+
+
 
 
 # ==================

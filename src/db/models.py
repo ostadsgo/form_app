@@ -121,7 +121,14 @@ class FormModel:
         self.db.executemany(sql, fields)
         print("form name updated successfuly.")
         return True
-
+    
+    def delete_form(self, fid):
+        sql = """ DELETE FROM forms
+                  WHERE id = ?;
+                  """
+        self.db.execute(sql, (fid,))
+        print(f"Table with id {fid} deleted successfuly.")
+        return True
 
 class DataModel:
     def __init__(self):
