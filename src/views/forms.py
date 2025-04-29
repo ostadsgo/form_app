@@ -1,4 +1,4 @@
-"""Contain all forms related to form operation
+"""Contain all forms related to foprint(data, widget)
 like form creation, updating, deleting and etc.
 """
 
@@ -339,6 +339,7 @@ class DataInsertForm:
         # base is the place frame will shown
         self.header = []
         self.rows = []
+        self.widgets = []  # list widgets that created in the form
         # Types
         field_type_handlers = {
             "متن": self.input_type,  # Done
@@ -483,9 +484,9 @@ class DataInsertForm:
         y = QComboBox()
         m = QComboBox()
         d = QComboBox()
-        y.setObjectName("shamsi_year_{self.index}")
-        m.setObjectName("shamsi_month{self.index}")
-        d.setObjectName("shamsi_day{self.index}")
+        y.setObjectName(f"shamsi_year_{self.index}")
+        m.setObjectName(f"shamsi_month{self.index}")
+        d.setObjectName(f"shamsi_day{self.index}")
         months_shamsi = [
         "فروردین",
         "اردیبهشت",
@@ -655,6 +656,7 @@ class DataManageUI:
             # first row to detect fields type.
             row = [self.ui.table.item(selected_row, col).text() 
                    for col in range(self.ui.table.columnCount())]
+            data_row = []
             for column, cell in zip(header, row):
                 minus_num = cell.count("-")
                 if minus_num == 2:  # date
@@ -666,6 +668,7 @@ class DataManageUI:
                 else:
                     field = (column, "متن")
                 fields.append(field)
+                data_row.append(cell.split('-'))
 
             # build form
             self.win = QMainWindow()
@@ -680,13 +683,15 @@ class DataManageUI:
             layout.addStretch()  
             self.win.setCentralWidget(frame)
             self.win.show()
-
-
-
-
-
-
-
+            # populate selected row data over form widgets
+            for widgets, values in zip(form.rows, data_row):
+                for widget, value in zip(widgets, values):
+                    if isinstance(widget, QLineEdit):
+                        widget.setText(value)
+                    elif isinstance(widget, QComboBox):
+                        widget.setCurrentText(value)
+                    else:
+                        print(f"{widget} uknow to set value to it.")
 
 
 
