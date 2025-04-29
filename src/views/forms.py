@@ -196,43 +196,59 @@ class TableUpdateForm:
         self.ui.form_names.addItems(self.model.get_form_names())
         self.ui.form_names.currentIndexChanged.connect(self.on_form_name_select)
         self.ui.update_button.clicked.connect(self.on_update)
+        self.selected_form_id = 0
+        self.selected_form_name = ""
+        self.selected_form_fields = []
+        self.form_frame = None
         self.widget_index = 0
 
     def clear_body(self):
+        # if self.form_frame is not None:
+        #     self.form_frame.deleteLater()
+
+        for frame in self.ui.form_frame.findChildren(QFrame):
+            frame.deleteLater()
+
         for frame in self.ui.body.findChildren(QFrame):
             frame.deleteLater()
 
-    def make_update_form(self, name, fields):
+    def make_update_form(self):
         self.clear_body()
         # Form name 
         frame = QFrame()
         frame.setLayout(QHBoxLayout())
-        frame.setObjectName(f"form_name_frame")
         label = QLabel("نام فرم")
-        form_name = QLineEdit(name)
+        form_name = QLineEdit(self.selected_form_name)
         form_name.setObjectName(f"form_name")
         frame.layout().addWidget(label)
         frame.layout().addWidget(form_name)
-        self.ui.body.layout().addWidget(frame)
+        frame.setObjectName("form_frame_inner")
+        self.ui.form_frame.layout().addWidget(frame)
 
         field_type_list = self.model.field_types()
 
         # Rows (each field name and type)
-        for row in fields:
+        # id: 0, name: 1, type: 2, form_id 3
+        for row in self.selected_form_fields:
             row_frame = QFrame()
             row_frame.setLayout(QHBoxLayout())
             row_frame.setObjectName(f"row_frame_{self.widget_index}")
-            field_name = QLineEdit(row[0])
+            # Widgets
+            field_id = QLabel(str(row[0]))
+            field_name = QLineEdit(row[1])
             field_types = QComboBox()
+            field_id.setObjectName(str(field_id))
             field_name.setObjectName(f"field_name_{self.widget_index}")
             field_types.setObjectName(f"field_type_{self.widget_index}")
 
             field_types.addItems(field_type_list)
-            field_types.setCurrentText(row[1])
+            field_types.setCurrentText(row[2])
 
+            row_frame.layout().addWidget(field_id)
             row_frame.layout().addWidget(field_name)
             row_frame.layout().addWidget(field_types)
-            row_frame.layout().setStretch(0, 1)
+            row_frame.layout().setStretch(0, 0)
+            row_frame.layout().setStretch(1, 1)
             row_frame.layout().setStretch(1, 1)
             row_frame.layout().setStretch(2, 1)
             
@@ -242,12 +258,34 @@ class TableUpdateForm:
     def on_form_name_select(self, index):
         forms = self.model.get_forms()
         # maybe some check required 
-        fid, fname = forms[index]
-        form_fields = self.model.get_form_fields(fid)
-        self.make_update_form(fname, form_fields)
+        self.selected_form_id, self.selected_form_name = forms[index]
+        self.selected_form_fields = self.model.get_form_fields_with_id(self.selected_form_id)
+        self.make_update_form()
+        self.ui.update_button.setEnabled(True)
         
     def on_update(self):
-        print(self.ui.body.findChildren(QFrame)) 
+        ### Update Form Name
+        form_name_widget = self.ui.form_frame.findChild(QLineEdit, "form_name")
+        form_name = form_name_widget.text()
+        self.model.update_form_name(self.selected_form_id, form_name)
+        form_names = self.model.get_form_names()
+        self.ui.form_names.clear()
+        self.ui.form_names.addItems(form_names)
+        self.ui.form_names.setCurrentText(form_name)
+
+        ### Update Fields
+        row_frames = self.ui.body.findChildren(QFrame, options=Qt.FindDirectChildrenOnly)
+        fields = []
+        for row_frame in row_frames:
+            field_name = row_frame.findChild(QLineEdit).text() 
+            field_type = row_frame.findChild(QComboBox).currentText() 
+            field_id = row_frame.findChild(QLabel).text()
+            fields.append((field_name, field_type, field_id))
+
+        self.model.update_form_fields(fields)
+            
+
+
 
         
 

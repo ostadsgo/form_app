@@ -97,10 +97,31 @@ class FormModel:
         # Field name and field type
         return [(field[1], field[2]) for field in fields]
 
+    def get_form_fields_with_id(self, fid):
+        sql = """ SELECT * FROM fields WHERE form_id = (?); """
+        fields = self.db.fetch_all(sql, (fid,))
+        # Field name and field type
+        return fields
+
     def get_forms(self):
         sql = """ SELECT * FROM forms; """
         fidname = self.db.fetch_all(sql)
         return fidname
+
+    def update_form_name(self, fid, new_name):
+        sql = """ UPDATE forms SET name = ? WHERE id = ?;""" 
+        self.db.execute(sql, (new_name, fid))
+        print("form name updated successfuly.")
+        return True
+
+    def update_form_fields(self, fields):
+        sql = """ UPDATE fields 
+                  SET name = ?, type = ?
+                  WHERE id = ?;""" 
+        self.db.executemany(sql, fields)
+        print("form name updated successfuly.")
+        return True
+
 
 class DataModel:
     def __init__(self):
