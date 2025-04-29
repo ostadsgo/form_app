@@ -191,7 +191,71 @@ class TableCreateForm:
 
 class TableUpdateForm:
     def __init__(self):
-        pass
+        self.ui = UI.load_ui("update.ui")
+        self.model = models.FormModel()
+        self.ui.form_names.addItems(self.model.get_form_names())
+        self.ui.form_names.currentIndexChanged.connect(self.on_form_name_select)
+        self.ui.update_button.clicked.connect(self.on_update)
+        self.widget_index = 0
+
+    def clear_body(self):
+        for frame in self.ui.body.findChildren(QFrame):
+            frame.deleteLater()
+
+    def make_update_form(self, name, fields):
+        self.clear_body()
+        # Form name 
+        frame = QFrame()
+        frame.setLayout(QHBoxLayout())
+        frame.setObjectName(f"form_name_frame")
+        label = QLabel("نام فرم")
+        form_name = QLineEdit(name)
+        form_name.setObjectName(f"form_name")
+        frame.layout().addWidget(label)
+        frame.layout().addWidget(form_name)
+        self.ui.body.layout().addWidget(frame)
+
+        field_type_list = self.model.field_types()
+
+        # Rows (each field name and type)
+        for row in fields:
+            row_frame = QFrame()
+            row_frame.setLayout(QHBoxLayout())
+            row_frame.setObjectName(f"row_frame_{self.widget_index}")
+            field_name = QLineEdit(row[0])
+            field_types = QComboBox()
+            field_name.setObjectName(f"field_name_{self.widget_index}")
+            field_types.setObjectName(f"field_type_{self.widget_index}")
+
+            field_types.addItems(field_type_list)
+            field_types.setCurrentText(row[1])
+
+            row_frame.layout().addWidget(field_name)
+            row_frame.layout().addWidget(field_types)
+            row_frame.layout().setStretch(0, 1)
+            row_frame.layout().setStretch(1, 1)
+            row_frame.layout().setStretch(2, 1)
+            
+            self.ui.body.layout().addWidget(row_frame)
+            self.widget_index += 1
+
+    def on_form_name_select(self, index):
+        forms = self.model.get_forms()
+        # maybe some check required 
+        fid, fname = forms[index]
+        form_fields = self.model.get_form_fields(fid)
+        self.make_update_form(fname, form_fields)
+        
+    def on_update(self):
+        print(self.ui.body.findChildren(QFrame)) 
+
+        
+
+        
+        
+        
+        
+
 
 
 class TableDeleteForm:
@@ -722,18 +786,6 @@ class DataManageUI:
         # update csv file and refresh tableo
         self.save_table()
         self.refresh_table()
-
-
-
-
-
-
-
-
-
-
-
-
 
 # -- MultiChoice --
 # ==================

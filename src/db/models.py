@@ -86,6 +86,21 @@ class FormModel:
         self.db.executemany(sql, rows)
         print(f"Table {name} with id {tid} stored with fields succussfully.")
 
+    def get_form_names(self):
+        sql = """ SELECT name FROM forms; """
+        names = self.db.fetch_all(sql)
+        return [name for row in names for name in row]
+
+    def get_form_fields(self, fid):
+        sql = """ SELECT * FROM fields WHERE form_id = (?); """
+        fields = self.db.fetch_all(sql, (fid,))
+        # Field name and field type
+        return [(field[1], field[2]) for field in fields]
+
+    def get_forms(self):
+        sql = """ SELECT * FROM forms; """
+        fidname = self.db.fetch_all(sql)
+        return fidname
 
 class DataModel:
     def __init__(self):

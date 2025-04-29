@@ -28,7 +28,8 @@ class MainWindow(QMainWindow):
 
         # *Temperory* --> Test
         # self.load_data_insert_form()
-        self.load_data_view()
+        # self.load_data_view()
+        self.load_table_update_form()
 
 
     def init(self):
@@ -69,9 +70,13 @@ class MainWindow(QMainWindow):
         help_menu.addActions([help_action, help_contact_action, help_about_action])
 
         ### EVENTS
+        # Table Form
         table_create_form_action.triggered.connect(self.load_table_create_form)
+        table_update_form_action.triggered.connect(self.load_table_update_form)
+        # Data
         data_insert_from_action.triggered.connect(self.load_data_insert_form)
         data_view_action.triggered.connect(self.load_data_view)
+        # Multichoice
 
     def main(self):
         mainframe = QFrame()
@@ -103,7 +108,14 @@ class MainWindow(QMainWindow):
         self.clear_mainframe()
         self.frame = forms.DataManageUI()
         self.layout.addWidget(self.frame.ui)
-        print("data view")
+
+    def load_table_update_form(self):
+        self.clear_mainframe()
+        self.frame = forms.TableUpdateForm()
+        self.layout.addWidget(self.frame.ui)
+        print("Table update")
+
+
 
 
     @classmethod
