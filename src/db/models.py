@@ -81,7 +81,7 @@ class FormModel:
         sql = """INSERT INTO forms(name) VALUES (?)"""
         tid = self.db.execute(sql, (name,))
 
-        sql = """ INSERT INTO fields (name, type, form_id) VALUES (?, ?, ?)"""
+        sql = """ INSERT INTO fields (name, type, option_id, form_id) VALUES (?, ?, ?, ?)"""
         rows = [(*row, tid) for row in rows]
         self.db.executemany(sql, rows)
         print(f"Table {name} with id {tid} stored with fields succussfully.")

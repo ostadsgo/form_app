@@ -60,6 +60,7 @@ class TableCreateForm:
         self.ui = UI.load_ui("create.ui")
         self.field_index = 0
         self.row_widgets = []
+        self.option_ids = []
 
         self.option_model = models.OptionModel()
 
@@ -108,7 +109,7 @@ class TableCreateForm:
         layout.addSpacing(5)
         layout.setContentsMargins(5, 5, 5, 5)
 
-        self.row_widgets.append((field_types, multichoice))
+        self.row_widgets.append((field_name, field_types, multichoice))
 
         # for multi choice
         field_types.currentIndexChanged.connect(self.on_field_type)
@@ -123,20 +124,30 @@ class TableCreateForm:
         field_type = self.types[index]
         all_option = self.option_model.get_options()
         option_names = [opt[1] for opt in all_option]
+        self.option_ids = [opt[0] for opt in all_option]
+        print(self.row_widgets)
         for row in self.row_widgets:
-            row[1].clear()
-            if row[0].currentText() == "چند گزینه":
-                row[1].setEnabled(True)
-                row[1].addItems(option_names)
+            row[2].clear()
+            if row[1].currentText() == "چند گزینه":
+                row[2].setEnabled(True)
+                row[2].addItems(option_names)
             else:
-                row[1].setEnabled(False)
+                row[2].setEnabled(False)
 
     def rows(self):
         rows = []
-        for frame in self.row_frames():
-            name = frame.findChild(QLineEdit).text()
-            types = frame.findChild(QComboBox).currentText()
-            rows.append((name, types))
+        for widget in self.row_widgets:
+            name = widget[0].text()
+            types = widget[1].currentText()
+            multichoice = widget[2]
+            current_index = multichoice.currentIndex()
+            if current_index == -1:
+                rows.append((name, types, 0))
+            else:
+                rows.append((name, types, self.option_ids[current_index]))
+            # else:
+            #     rows.append((name, types))
+        print(rows)
         return rows
 
     def row_frames(self):
@@ -178,6 +189,7 @@ class TableCreateForm:
         return True
 
     def clear_body(self):
+        self.row_widgets = []
         for frame in self.row_frames():
             frame.deleteLater()
 
