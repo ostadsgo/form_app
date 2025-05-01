@@ -149,10 +149,29 @@ class DataModel:
         form_name = self.db.fetch_one(sql, (fid,))
         return form_name[0]
 
-
     def get_form_fields(self, fid):
         sql = """ SELECT * FROM fields WHERE form_id = (?); """
         fields = self.db.fetch_all(sql, (fid,))
         # Field name and field type
         return [(field[1], field[2]) for field in fields]
+
+class OptionModel:
+    def __init__(self):
+        self.db = Database("forms.db")
+
+    def save_option(self, option_name):
+        sql = """ INSERT INTO option (name) VALUES (?);"""
+        option_id = self.db.execute(sql, (option_name,))
+        return option_id
+
+    def save_options(self, options):
+        sql = """ INSERT INTO options (option_id, name) VALUES (?, ?);"""
+        self.db.executemany(sql, options)
+        return True
+
+    def get_options(self):
+        sql = """ SELECT * FROM option;"""
+        options = self.db.fetch_all(sql)
+        return options
+
 

@@ -59,6 +59,9 @@ class TableCreateForm:
         ### UI
         self.ui = UI.load_ui("create.ui")
         self.field_index = 0
+        self.row_widgets = []
+
+        self.option_model = models.OptionModel()
 
         ### Models
         self.model = models.FormModel()
@@ -105,11 +108,28 @@ class TableCreateForm:
         layout.addSpacing(5)
         layout.setContentsMargins(5, 5, 5, 5)
 
+        self.row_widgets.append((field_types, multichoice))
+
+        # for multi choice
+        field_types.currentIndexChanged.connect(self.on_field_type)
+
         # Add frame to layout
         self.ui.body.layout().addWidget(frame)
         # must be here.
         field_name.setFocus()
         self.field_index += 1
+
+    def on_field_type(self, index):
+        field_type = self.types[index]
+        all_option = self.option_model.get_options()
+        option_names = [opt[1] for opt in all_option]
+        for row in self.row_widgets:
+            row[1].clear()
+            if row[0].currentText() == "چند گزینه":
+                row[1].setEnabled(True)
+                row[1].addItems(option_names)
+            else:
+                row[1].setEnabled(False)
 
     def rows(self):
         rows = []
@@ -328,10 +348,6 @@ class TableDeleteForm:
         self.delete_selected_row()
         # delete operation on db
         self.model.delete_form(form_id)
-
-
-
-
 
 # ==================
 # -- Data --
@@ -861,7 +877,73 @@ class DataManageUI:
 # ==================
 class MultiChoiceCreateForm:
     def __init__(self):
-        pass
+        self.ui = UI.load_ui("multichoice_create.ui")
+        self.model = models.OptionModel()
+        self.option_line_edits = []
+
+        self.ui.mc_add.clicked.connect(self.on_mc_add)
+        self.ui.mc_save.clicked.connect(self.on_mc_save)
+        self.index = 0
+        self.create_multichoice()
+
+
+    def create_multichoice(self):
+        # Frame
+        frame = QFrame()
+        frame.setLayout(QHBoxLayout())
+        frame.setObjectName(f"mc_row_frame_{self.index}")
+
+        # Widgets of the frame
+        check = QCheckBox()
+        name = QLineEdit()
+        self.option_line_edits.append(name)
+        check.setObjectName(f"check_{self.index}")
+        name.setObjectName(f"name_{self.index}")
+        name.setPlaceholderText("مانند: فورد")
+        frame.layout().addWidget(check)
+        frame.layout().addWidget(name)
+
+        self.ui.mc_frame.layout().addWidget(frame)
+        self.index += 1
+
+    def on_mc_add(self):
+        if self.is_input_empty():
+            return
+
+        self.create_multichoice()
+
+    def is_input_empty(self):
+        """Check all field name widgets to not be empty."""
+        # Check multi choice name
+        self.ui.mc_name.setStyleSheet("")
+        if not self.ui.mc_name.text():
+            self.ui.mc_name.setStyleSheet("border: 2px solid red;")
+            
+        # all options of the multi choice
+        for name in self.option_line_edits:
+            name.setStyleSheet("")
+            if not name.text().strip():
+                name.setStyleSheet("border: 2px solid red;")
+                return True
+        return False
+
+    def on_mc_save(self):
+        # todo:  Check no field been empty
+        if self.is_input_empty():
+            return
+
+        # save name of multi choice
+        option_name = self.ui.mc_name.text()
+        option_id = self.model.save_option(option_name)
+        print(f"table {option_id} saved successfully.")
+        names = []
+        if option_id:
+            for le in self.option_line_edits:
+                names.append((option_id, le.text()))
+
+        self.model.save_options(names)
+        print(f"options saved. {names}")
+        
 
 
 class MultiChoiceUpdateForm:

@@ -27,10 +27,12 @@ class MainWindow(QMainWindow):
         self.statusbar()
 
         # *Temperory* --> Test
+        self.load_table_create_form()
         # self.load_data_insert_form()
         # self.load_data_view()
         # self.load_table_update_form()
-        self.load_table_delete_form()
+        # self.load_table_delete_form()
+        # self.load_mc_create_form()
 
 
     def init(self):
@@ -42,7 +44,7 @@ class MainWindow(QMainWindow):
         menubar = self.menuBar()
         menubar.setLayoutDirection(Qt.RightToLeft)
 
-        ### frame menu
+        ### form menu
         table_from_menu = menubar.addMenu("فرم")
         table_create_form_action = QAction("ایجاد فرم", self)
         table_update_form_action = QAction("ویرایش فرم", self)
@@ -51,12 +53,18 @@ class MainWindow(QMainWindow):
             [table_create_form_action, table_update_form_action, table_delete_form_action]
         )
 
-        ### Information menu
+        ### Data menu
         data_form_menu = menubar.addMenu("داده")
         data_insert_from_action = QAction("افزودن داده", self)
         data_view_action = QAction("نمایش داده", self)
         data_manage_action = QAction("مدیریت داده", self)
         data_form_menu.addActions([data_insert_from_action, data_view_action, data_manage_action])
+
+        ### Multichoice 
+        mc_menu = menubar.addMenu("چند گزینه")
+        mc_create_form_action = QAction("ایجاد چند گزینه", self)
+        mc_update_form_action = QAction("ایجاد چند گزینه", self)
+        mc_menu.addActions([mc_create_form_action, mc_update_form_action])
 
         ### Report Menu
         report_menu = menubar.addMenu("گزارشات")
@@ -79,6 +87,7 @@ class MainWindow(QMainWindow):
         data_insert_from_action.triggered.connect(self.load_data_insert_form)
         data_view_action.triggered.connect(self.load_data_view)
         # Multichoice
+        mc_create_form_action.triggered.connect(self.load_mc_create_form)
 
     def main(self):
         mainframe = QFrame()
@@ -121,6 +130,15 @@ class MainWindow(QMainWindow):
         self.frame = forms.TableDeleteForm()
         self.layout.addWidget(self.frame.ui)
         print("Table delete")
+
+    # Multichoice
+    def load_mc_create_form(self):
+        self.clear_mainframe()
+        self.frame = forms.MultiChoiceCreateForm()
+        self.layout.addWidget(self.frame.ui)
+        print("Multichoice create")
+
+
 
 
 
