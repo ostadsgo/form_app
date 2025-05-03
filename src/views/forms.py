@@ -374,7 +374,6 @@ class DataInsertForm:
         self.rows = []
         self.data = []
 
-
         # get form names and set it to combobox
         names = self.model.get_form_names()
         self.ui.form_names.addItems(names)
@@ -517,7 +516,11 @@ class DataInsertForm:
             "چند گزینه": self.multichoice_type,
         }
 
-        for name, ftype in fields:
+        for field_index, field in enumerate(fields):
+            self.field_index = field_index
+            name = field[0]
+            ftype = field[1]
+            self.field_name_label = name
             frame, layout = self.continer()
             self.name_type(name, layout)
             
@@ -682,7 +685,32 @@ class DataInsertForm:
 
 
     def multichoice_type(self, layout):
-        pass
+        combo = QComboBox()
+        combo.setObjectName(f"multi_choice_{self.index}")
+        layout.addWidget(combo)
+
+        # db quries
+        selected_form_name = self.ui.form_names.currentText()
+        form_id = self.model.get_form_id(selected_form_name)
+        option_ids = self.model.get_field_option_id(form_id)
+        option_ids = [oid[0] for oid in option_ids]
+        options = self.model.get_options(option_ids[self.field_index])
+        print(options)
+        #
+        combo.addItems([item[0] for item in options])
+
+        
+        
+
+
+
+
+
+
+        self.rows.append([combo])
+
+
+
 
     def phone_type(self, layout):
         e = QLineEdit()

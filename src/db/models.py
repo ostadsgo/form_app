@@ -155,6 +155,23 @@ class DataModel:
         # Field name and field type
         return [(field[1], field[2]) for field in fields]
 
+    def get_field_option_id(self, form_id):
+        sql = """ SELECT option_id FROM fields WHERE form_id = (?) AND type = "چند گزینه" ; """
+        options_ids = self.db.fetch_all(sql, (form_id,))
+        return options_ids
+
+    def get_options(self, option_id):
+        sql = """SELECT name FROM options WHERE option_id = ?;"""
+        options = self.db.fetch_all(sql, (option_id,))
+        return options
+        
+
+
+
+
+
+
+
 class OptionModel:
     def __init__(self):
         self.db = Database("forms.db")
