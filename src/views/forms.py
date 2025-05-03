@@ -373,6 +373,7 @@ class DataInsertForm:
         self.header = []
         self.rows = []
         self.data = []
+        self.mc_index = 0
 
         # get form names and set it to combobox
         names = self.model.get_form_names()
@@ -517,7 +518,6 @@ class DataInsertForm:
         }
 
         for field_index, field in enumerate(fields):
-            self.field_index = field_index
             name = field[0]
             ftype = field[1]
             self.field_name_label = name
@@ -690,26 +690,18 @@ class DataInsertForm:
         layout.addWidget(combo)
 
         # db quries
+        # remeber you cannot use option_ids.pop(0) cuz option_ids populated
+        #   every time a multi choice field created.
         selected_form_name = self.ui.form_names.currentText()
         form_id = self.model.get_form_id(selected_form_name)
         option_ids = self.model.get_field_option_id(form_id)
         option_ids = [oid[0] for oid in option_ids]
-        options = self.model.get_options(option_ids[self.field_index])
+        options = self.model.get_options(option_ids[self.mc_index])
         print(options)
         #
         combo.addItems([item[0] for item in options])
-
-        
-        
-
-
-
-
-
-
         self.rows.append([combo])
-
-
+        self.mc_index += 1
 
 
     def phone_type(self, layout):
@@ -751,7 +743,14 @@ class DataManageUI:
         form_ids = [int(file.removesuffix(".csv")) for file in files if file.endswith(".csv")]
         # get form name
         self.model = models.DataModel()
-        form_names = [self.model.get_form_name(fid) for fid in form_ids]
+
+        # Extract forms that has csv file aka data.
+        form_names = []
+        for form_id in form_ids:
+            form_name = self.model.get_form_name(form_id)
+            if form_name is not None:
+                form_names.append(form_name)
+
         self.ui.form_names.addItems(form_names)
         self.ui.form_names.currentTextChanged.connect(self.on_form_select)
         self.ui.save_button.clicked.connect(self.on_save_table)

@@ -56,14 +56,13 @@ class MainWindow(QMainWindow):
         ### Data menu
         data_form_menu = menubar.addMenu("داده")
         data_insert_from_action = QAction("افزودن داده", self)
-        data_view_action = QAction("نمایش داده", self)
         data_manage_action = QAction("مدیریت داده", self)
-        data_form_menu.addActions([data_insert_from_action, data_view_action, data_manage_action])
+        data_form_menu.addActions([data_insert_from_action, data_manage_action])
 
         ### Multichoice 
         mc_menu = menubar.addMenu("چند گزینه")
         mc_create_form_action = QAction("ایجاد چند گزینه", self)
-        mc_update_form_action = QAction("ایجاد چند گزینه", self)
+        mc_update_form_action = QAction("بروزرسانی چند گزینه", self)
         mc_menu.addActions([mc_create_form_action, mc_update_form_action])
 
         ### Report Menu
@@ -85,7 +84,7 @@ class MainWindow(QMainWindow):
         table_delete_form_action.triggered.connect(self.load_table_delete_form)
         # Data
         data_insert_from_action.triggered.connect(self.load_data_insert_form)
-        data_view_action.triggered.connect(self.load_data_view)
+        data_manage_action.triggered.connect(self.load_data_manage)
         # Multichoice
         mc_create_form_action.triggered.connect(self.load_mc_create_form)
 
@@ -114,7 +113,7 @@ class MainWindow(QMainWindow):
         self.frame = forms.DataInsertForm()
         self.layout.addWidget(self.frame.ui)
 
-    def load_data_view(self):
+    def load_data_manage(self):
         self.clear_mainframe()
         self.frame = forms.DataManageUI()
         self.layout.addWidget(self.frame.ui)

@@ -147,7 +147,11 @@ class DataModel:
     def get_form_name(self, fid):
         sql = """ SELECT name FROM forms WHERE id = (?); """
         form_name = self.db.fetch_one(sql, (fid,))
-        return form_name[0]
+        print(form_name, type(form_name))
+        if form_name is not None:
+            return form_name[0]
+        return None
+    
 
     def get_form_fields(self, fid):
         sql = """ SELECT * FROM fields WHERE form_id = (?); """
